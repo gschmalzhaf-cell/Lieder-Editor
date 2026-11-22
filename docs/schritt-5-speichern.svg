@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" font-family="system-ui, sans-serif">
+  <rect width="800" height="500" fill="#f4f5f9"/>
+  <rect x="0" y="0" width="800" height="56" fill="#ffffff"/>
+  <text x="20" y="36" font-size="19" font-weight="700" fill="#3b4a8c">🎵 Lieder-Editor</text>
+  <rect x="600" y="12" width="180" height="34" rx="8" fill="#3b4a8c"/>
+  <text x="690" y="34" text-anchor="middle" font-size="13" font-weight="700" fill="#ffffff">Als Datei speichern</text>
+  <rect x="30" y="80" width="740" height="150" rx="12" fill="#fdecea" stroke="#b3261e" stroke-width="3"/>
+  <text x="50" y="112" font-size="17" font-weight="700" fill="#b3261e">Bevor du speichern kannst, ist noch etwas offen:</text>
+  <text x="70" y="145" font-size="16" fill="#1c1c1e">• Bitte gib dem Lied noch einen Titel.</text>
+  <text x="70" y="175" font-size="16" fill="#1c1c1e">• Die Strophe 2 ist noch leer. Fülle sie oder lösch sie.</text>
+  <rect x="30" y="250" width="740" height="90" rx="12" fill="#e6f4ea" stroke="#1e7d46" stroke-width="3"/>
+  <text x="50" y="288" font-size="17" font-weight="700" fill="#1e7d46">Alles gut? Dann lädt der Knopf oben die Datei herunter:</text>
+  <text x="50" y="318" font-size="16" fill="#1c1c1e">„Näher_mein_Gott_zu_Dir.sng“ – der Name kommt vom Titel.</text>
+  <text x="30" y="390" font-size="15" fill="#555">Nebenbei: Das Programm merkt sich jeden Tastendruck automatisch im Browser.</text>
+  <text x="30" y="415" font-size="15" fill="#555">Öffnest du die Seite später wieder, fragt es: „Weiter bearbeiten“ oder „Neu beginnen“?</text>
+</svg>
