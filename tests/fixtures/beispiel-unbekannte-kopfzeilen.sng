@@ -1,0 +1,31 @@
+#Title=Englische Namen und Zusatzangaben
+#Author=Someone
+#Editor=SongBeamer 4.04c
+#Key=F#m
+#CCLI=858299
+#VerseOrder=Verse 1,Chorus,Verse 2,Chorus,Bridge
+#LangCount=1
+#Version=3
+---
+Verse 1
+First line of the verse
+Second line of the verse
+
+---
+Chorus
+Chorus line
+
+---
+Verse 2
+Another line
+
+---
+Bridge
+Bridge line
+
+---
+Direkter Text ohne eigenen Namen
+Erste Zeile des unbenannten Teils
+
+Zweite Zeile des unbenannten Teils
+
