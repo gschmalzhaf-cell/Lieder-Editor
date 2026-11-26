@@ -21,7 +21,7 @@ import {
   WEITERE_TEILE,
   cleanSectionName,
   encodeSong,
-  getHeaderValue,
+  isSongBilingual,
   nameForNewPart,
   nextPartId,
   sngFilename,
@@ -31,6 +31,7 @@ import type { HeaderFields, Part, PartType, Song, ValidationIssue } from '../sng
 import HeaderForm from './HeaderForm';
 import PartCard from './PartCard';
 import Preview from './Preview';
+import VerseOrderBar from './VerseOrderBar';
 
 interface Props {
   history: SongHistory;
@@ -103,7 +104,26 @@ export default function Editor({ history, onExit }: Props) {
     setFocusRequest(null);
   }, []);
 
-  const langCount = Number(getHeaderValue(song, 'langcount') ?? '1');
+  const langCount = song.langCount || 1;
+  const bilingual = langCount <= 2 && isSongBilingual(song);
+
+  const toggleBilingual = (enabled: boolean) => {
+    const nextLangCount = enabled ? 2 : 1;
+    if (song.langCount === nextLangCount && bilingual === enabled) return;
+    update({
+      ...song,
+      langCount: nextLangCount,
+      headerDirty: true,
+    });
+  };
+
+  const updateVerseOrder = (verseOrder: string[]) => {
+    update({
+      ...song,
+      verseOrder,
+      headerDirty: true,
+    });
+  };
 
   const addPart = (type: PartType, customName?: string, askNameImmediately = false) => {
     const part: Part = {
@@ -132,9 +152,31 @@ export default function Editor({ history, onExit }: Props) {
     const trimmed = nextName.trim();
     const currentClean = cleanSectionName(part.name).trim();
     if (trimmed === currentClean) return;
-    updatePart(part.id, {
-      name: trimmed === '' ? null : trimmed,
-      origin: part.origin === 'datei' ? 'neu' : part.origin,
+
+    const nextParts = song.parts.map((p) =>
+      p.id === part.id
+        ? {
+            ...p,
+            name: trimmed === '' ? null : trimmed,
+            origin: p.origin === 'datei' ? ('neu' as const) : p.origin,
+          }
+        : p,
+    );
+
+    let orderChanged = false;
+    const nextOrder = song.verseOrder.map((entry) => {
+      if (currentClean && entry.trim().toLowerCase() === currentClean.toLowerCase() && trimmed) {
+        orderChanged = true;
+        return trimmed;
+      }
+      return entry;
+    });
+
+    update({
+      ...song,
+      parts: nextParts,
+      verseOrder: nextOrder,
+      headerDirty: song.headerDirty || orderChanged,
     });
   };
 
@@ -268,10 +310,10 @@ export default function Editor({ history, onExit }: Props) {
         </div>
       </header>
 
-      {langCount > 1 && (
+      {langCount > 2 && (
         <div className="hinweis" role="status">
-          Diese Datei enthält mehrere Sprachen. Sie wird so angezeigt und wieder ausgegeben, wie
-          sie ist.
+          Diese Datei enthält {langCount} Sprachen. Sie wird so angezeigt und unverändert wieder
+          ausgegeben.
         </div>
       )}
       {notice && (
@@ -303,7 +345,20 @@ export default function Editor({ history, onExit }: Props) {
         </div>
       )}
 
-      <HeaderForm header={song.header} onChange={updateHeader} titleInputRef={titleInputRef} />
+      <HeaderForm
+        header={song.header}
+        bilingual={bilingual}
+        onToggleBilingual={toggleBilingual}
+        onChange={updateHeader}
+        titleInputRef={titleInputRef}
+      />
+
+      <VerseOrderBar
+        parts={song.parts}
+        verseOrder={song.verseOrder}
+        onChange={updateVerseOrder}
+        onSelectPart={(id) => setSelectedId(id)}
+      />
 
       <main className="arbeitsflaeche">
         <section className="teile" aria-label="Liedteile">
@@ -330,12 +385,12 @@ export default function Editor({ history, onExit }: Props) {
                   index={i}
                   count={song.parts.length}
                   selected={part.id === selectedId}
+                  bilingual={bilingual}
+                  langCount={langCount}
                   focusTarget={focusRequest?.id === part.id ? focusRequest.target : null}
                   onFocusHandled={clearFocusRequest}
                   onSelect={() => setSelectedId(part.id)}
-                  onLines={(text) =>
-                    updatePart(part.id, { lines: text.split('\n') }, `part:${part.id}`)
-                  }
+                  onLines={(lines) => updatePart(part.id, { lines }, `part:${part.id}`)}
                   onRename={(name) => renamePart(part, name)}
                   onMove={(delta) => movePart(part.id, delta)}
                   onRepeat={() => repeatPart(part.id)}
@@ -386,6 +441,7 @@ export default function Editor({ history, onExit }: Props) {
           parts={song.parts}
           index={selectedIndex}
           langCount={langCount}
+          bilingual={bilingual}
           onNavigate={navigate}
         />
       </main>

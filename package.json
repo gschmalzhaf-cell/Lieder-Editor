@@ -1,7 +1,7 @@
 {
   "name": "lieder-editor",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "Lied-Editor für SongBeamer-Dateien (.sng) – läuft vollständig im Browser, ohne Server und ohne Konto.",
   "scripts": {

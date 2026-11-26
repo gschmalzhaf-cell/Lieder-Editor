@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { cleanSectionName, partDisplayName, partIcon } from '../sng';
+import {
+  cleanSectionName,
+  mergePartLanguages,
+  partDisplayName,
+  partIcon,
+  splitPartLanguages,
+} from '../sng';
 import type { Part } from '../sng';
 
 interface Props {
@@ -9,10 +15,12 @@ interface Props {
   index: number;
   count: number;
   selected: boolean;
+  bilingual?: boolean;
+  langCount?: number;
   focusTarget?: 'text' | 'name' | null;
   onFocusHandled?: () => void;
   onSelect: () => void;
-  onLines: (text: string) => void;
+  onLines: (lines: string[]) => void;
   onRename: (name: string) => void;
   onMove: (delta: number) => void;
   onRepeat: () => void;
@@ -21,7 +29,16 @@ interface Props {
 }
 
 export default function PartCard(props: Props) {
-  const { part, index, count, selected, focusTarget, onFocusHandled } = props;
+  const {
+    part,
+    index,
+    count,
+    selected,
+    bilingual = false,
+    langCount = 1,
+    focusTarget,
+    onFocusHandled,
+  } = props;
   const {
     attributes,
     listeners,
@@ -65,6 +82,7 @@ export default function PartCard(props: Props) {
   );
 
   const displayName = partDisplayName(part, index);
+  const split = bilingual ? splitPartLanguages(part, Math.max(2, langCount)) : null;
 
   const askDelete = () => {
     if (confirmDelete) {
@@ -138,16 +156,56 @@ export default function PartCard(props: Props) {
         )}
         {part.origin === 'wiederholung' && <span className="abzeichen">Wiederholung</span>}
       </header>
-      <textarea
-        ref={textAreaRef}
-        className="karten-text"
-        value={part.lines.join('\n')}
-        rows={Math.max(3, part.lines.length)}
-        placeholder={'Text hier eingeben …\n\nEine leere Zeile macht Abstand auf der Folie.'}
-        aria-label={`Text von ${displayName}`}
-        onChange={(e) => props.onLines(e.target.value)}
-        onFocus={props.onSelect}
-      />
+
+      {bilingual && split ? (
+        <div className="zweisprachig-felder">
+          <label className="sprach-spalte">
+            <span className="sprach-titel">Sprache 1</span>
+            <textarea
+              ref={textAreaRef}
+              className="karten-text"
+              value={split.lang1.join('\n')}
+              rows={Math.max(3, split.lang1.length, split.lang2.length)}
+              placeholder={'Zeilen in Sprache 1 …'}
+              aria-label={`Text von ${displayName} (Sprache 1)`}
+              onChange={(e) =>
+                props.onLines(
+                  mergePartLanguages(e.target.value.split('\n'), split.lang2, split.style),
+                )
+              }
+              onFocus={props.onSelect}
+            />
+          </label>
+          <label className="sprach-spalte">
+            <span className="sprach-titel sprach-titel--2">Sprache 2 (Übersetzung)</span>
+            <textarea
+              className="karten-text karten-text--lang2"
+              value={split.lang2.join('\n')}
+              rows={Math.max(3, split.lang1.length, split.lang2.length)}
+              placeholder={'Passende Zeilen in Sprache 2 …'}
+              aria-label={`Text von ${displayName} (Sprache 2)`}
+              onChange={(e) =>
+                props.onLines(
+                  mergePartLanguages(split.lang1, e.target.value.split('\n'), split.style),
+                )
+              }
+              onFocus={props.onSelect}
+            />
+          </label>
+        </div>
+      ) : (
+        <textarea
+          ref={textAreaRef}
+          className="karten-text"
+          value={part.lines.join('\n')}
+          rows={Math.max(3, part.lines.length)}
+          placeholder={'Text hier eingeben …\n\nEine leere Zeile macht Abstand auf der Folie.'}
+          aria-label={`Text von ${displayName}`}
+          onChange={(e) => props.onLines(e.target.value.split('\n'))}
+          onFocus={props.onSelect}
+        />
+      )}
+
       <div className="karten-aktionen">
         <button type="button" onClick={() => props.onMove(-1)} disabled={index === 0}>
           ↑ Nach oben

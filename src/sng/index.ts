@@ -6,3 +6,4 @@ export * from './serialize';
 export * from './validate';
 export * from './filename';
 export * from './preview';
+export * from './bilingual';

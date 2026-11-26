@@ -24,27 +24,40 @@ Konto und keine Datenbank. Nichts wird ins Internet hochgeladen.
 
 ![Kopfdaten: Titel und freiwillige Felder](docs/schritt-2-kopfdaten.svg)
 
-Oben steht der **Titel** – das ist das einzige Pflichtfeld. Darunter kannst du freiwillig
-Autor, Melodie, Liednummer, Copyright und Notizen eintragen. Leer lassen ist erlaubt.
+Oben steht der **Titel** – das ist das einzige Pflichtfeld. Daneben kannst du mit einem Klick
+zwischen **„Einsprachig“** und **„Zweisprachig“** umschalten (für zweisprachige Lieder erscheint
+dann auch ein Feld für den Titel in der 2. Sprache).
 
-### Schritt 3: Liedteile anlegen und bearbeiten
+Darunter stehen die wichtigsten freiwilligen Angaben: Autor, Melodie, CCLI/Liednummer, Copyright
+und Notizen. Über **„Weitere Angaben“** klappst du bei Bedarf alle weiteren SongBeamer-Felder auf:
+**Tonart, Taktart, Tempo (BPM), Liederbuch, Gemeinde-Nr., Originaltitel, Übersetzung, Rechte/Lizenz,
+Kategorien, Suchbegriffe und Bibelstelle**.
+
+### Schritt 3: Abspielreihenfolge & Liedteile
 
 ![Karten mit Strophe und Refrain](docs/schritt-3-teile.svg)
 
-Jeder Liedteil ist eine **Karte** mit Sinnbild, Farbe und Namen. Unter der Liste liegen drei große
-Knöpfe:
+- **Abspielreihenfolge (optional, per Drag’n’Drop):** Über den Karten kannst du festlegen, in
+  welcher Reihenfolge die Teile im Gottesdienst gespielt werden (z. B. *Intro → Chor → Vers 1 →
+  Pre-Refrain → Refrain → Chor → Vers 2 …*). So kannst du den Refrain mehrfach abspielen, ohne den
+  Text doppelt zu schreiben – einfach Bausteine anklicken und mit der Maus oder dem Finger ziehen.
+- **Liedteile als Karten:** Jeder Liedteil ist eine Karte mit Sinnbild, Farbe und Namen. Bei
+  **zweisprachigen Liedern** hat jede Karte automatisch zwei getrennte Textfelder nebeneinander
+  (**Sprache 1** und **Sprache 2**), ohne dass du jemals Steuerzeichen eintippen musst.
+
+Unter der Liste liegen drei große Knöpfe:
 
 - **„+ Strophe hinzufügen“** – wird automatisch nummeriert (Vers 1, Vers 2, …)
 - **„+ Refrain hinzufügen“** – (Refrain, Refrain 2, …)
-- **„Weiteres Teil ▾“** – öffnet ein Menü mit Bridge, Intro, Schluss, Zwischenspiel,
-  gesprochenem Text, Antwort, Solo und weiteren seltenen Teilen
+- **„Weiteres Teil ▾“** – öffnet ein Menü mit Bridge, Pre-Refrain, Pre-Bridge, Intro, Schluss,
+  Zwischenspiel, Instrumental, Chor, gesprochenem Text, Antwort, Solo und weiteren Teilen
 
 In jede Karte schreibst du den Text direkt hinein. **Mehrere Zeilen** sind möglich; eine
 **leere Zeile** macht später Abstand auf der Folie.
 
 An jeder Karte kannst du:
 
-- **umbenennen** (auf den Namen klicken),
+- **umbenennen** (auf den Namen klicken – die Abspielreihenfolge aktualisiert sich automatisch mit),
 - **verschieben** – am Laptop mit der Maus am Griff-Symbol (⠿) ziehen, am Tablet **lange auf das
   Griff-Symbol drücken** und dann ziehen; alternativ die Knöpfe „Nach oben“ / „Nach unten“,
 - **wiederholen** („Teil wiederholen“ legt eine zweite, unabhängige Karte mit demselben Namen
@@ -57,9 +70,9 @@ An jeder Karte kannst du:
 ![Vorschau der Folie neben den Karten](docs/schritt-4-vorschau.svg)
 
 Rechts (auf dem Tablet darunter) siehst du die **Folie im Hochformat**, so wie die Gemeinde sie
-später sieht: große Schrift, alles mittig. Wenn du durch die Karten klickst oder die
-„Zurück“/„Weiter“-Knöpfe benutzt, wandert die Vorschau mit. Lange Folien werden automatisch
-passend verkleinert; ab 9 Zeilen erscheint ein kurzer Lesbarkeitstipp.
+später sieht: große Schrift, alles mittig. Bei zweisprachigen Liedern kannst du oben in der
+Vorschau zwischen **Beide / 1 / 2** umschalten. Lange Folien werden automatisch passend verkleinert;
+ab 9 Zeilen erscheint ein kurzer Lesbarkeitstipp.
 
 ### Schritt 5: Speichern
 

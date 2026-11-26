@@ -738,3 +738,351 @@ button:disabled {
   text-align: center;
   flex: 1 1 120px;
 }
+
+/* ---------- Kopfdaten: Sprachen-Umschalter & Erweiterte Angaben ---------- */
+
+.kopfdaten-oben {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.kopfdaten-oben .titel-feld {
+  flex: 1 1 280px;
+}
+
+.sprachen-umschalter {
+  display: inline-flex;
+  border: 2px solid var(--farbe-haupt);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--farbe-karte);
+}
+
+.sprachen-umschalter button {
+  min-height: 48px;
+  padding: 0.45rem 0.95rem;
+  border: none;
+  background: transparent;
+  color: var(--farbe-haupt);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.sprachen-umschalter button.aktiv {
+  background: var(--farbe-haupt);
+  color: #fff;
+}
+
+.titel-lang2-feld {
+  display: block;
+  margin-top: 0.75rem;
+}
+
+.erweitert-bereich {
+  margin-top: 0.9rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--farbe-rand);
+}
+
+.erweitert-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0.35rem 0.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--farbe-haupt);
+  text-align: left;
+}
+
+.erweitert-toggle:hover {
+  background: var(--farbe-haupt-hell);
+}
+
+.erweitert-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: var(--farbe-haupt-hell);
+  color: var(--farbe-haupt);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+
+.kopfdaten-grid--erweitert {
+  margin-top: 0.75rem;
+}
+
+/* ---------- Abspielreihenfolge (Drag'n'Drop) ---------- */
+
+.reihenfolge {
+  background: var(--farbe-karte);
+  border: 1px solid var(--farbe-rand);
+  border-radius: var(--radius);
+  padding: 0.95rem 1.05rem;
+  margin: 0.75rem 0;
+  box-shadow: var(--schatten-karte);
+}
+
+.reihenfolge--kompakt {
+  padding: 0.55rem 0.8rem;
+}
+
+.reihenfolge-oeffnen {
+  width: 100%;
+  min-height: 44px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-weight: 600;
+  color: var(--farbe-haupt);
+  padding: 0.25rem 0.4rem;
+  border-radius: 8px;
+}
+
+.reihenfolge-oeffnen:hover {
+  background: var(--farbe-haupt-hell);
+}
+
+.reihenfolge-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.reihenfolge-text {
+  margin: 0.2rem 0 0;
+  font-size: 0.92rem;
+  color: var(--farbe-text-leise);
+}
+
+.reihenfolge-aktionen {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.reihenfolge-aktionen button {
+  min-height: 40px;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9px;
+  border: 2px solid var(--farbe-rand);
+  background: #f2f4f9;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.reihenfolge-aktionen button:hover {
+  background: var(--farbe-haupt-hell);
+  border-color: var(--farbe-haupt);
+}
+
+.reihenfolge-liste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+  padding: 0.65rem;
+  border-radius: 10px;
+  background: var(--farbe-hintergrund);
+  border: 1px solid var(--farbe-rand);
+}
+
+.reihenfolge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: var(--farbe-karte);
+  border: 2px solid var(--farbe-rand);
+  border-left-width: 6px;
+  border-radius: 10px;
+  padding: 0.15rem 0.35rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.reihenfolge-chip.zieht {
+  opacity: 0.88;
+  box-shadow: var(--schatten-schwebend);
+}
+
+.reihenfolge-chip--strophe {
+  border-left-color: #2f669f;
+}
+.reihenfolge-chip--refrain {
+  border-left-color: #c0392b;
+}
+.reihenfolge-chip--bridge {
+  border-left-color: #7d3c98;
+}
+.reihenfolge-chip--intro {
+  border-left-color: #148f77;
+}
+.reihenfolge-chip--schluss {
+  border-left-color: #ca5310;
+}
+.reihenfolge-chip--zwischenspiel {
+  border-left-color: #238c50;
+}
+.reihenfolge-chip--weiterer {
+  border-left-color: #6c7a89;
+}
+.reihenfolge-chip--fehlt {
+  border-left-color: var(--farbe-fehler);
+  border-style: dashed;
+}
+
+.reihenfolge-griff {
+  min-width: 34px;
+  min-height: 36px;
+  border: none;
+  background: none;
+  font-size: 1.1rem;
+  cursor: grab;
+  touch-action: none;
+  border-radius: 6px;
+}
+
+.reihenfolge-griff:active {
+  cursor: grabbing;
+}
+
+.reihenfolge-label {
+  border: none;
+  background: none;
+  padding: 0.25rem 0.3rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: 6px;
+}
+
+.reihenfolge-label:hover {
+  background: var(--farbe-haupt-hell);
+}
+
+.reihenfolge-entfernen {
+  min-width: 32px;
+  min-height: 36px;
+  border: none;
+  background: none;
+  color: var(--farbe-text-leise);
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 6px;
+}
+
+.reihenfolge-entfernen:hover {
+  color: var(--farbe-fehler);
+  background: #fdecea;
+}
+
+.reihenfolge-leer {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  color: var(--farbe-text-leise);
+}
+
+.reihenfolge-palette {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.reihenfolge-palette-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--farbe-text-leise);
+}
+
+.reihenfolge-add-btn {
+  min-height: 38px;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 2px solid var(--farbe-haupt);
+  background: var(--farbe-karte);
+  color: var(--farbe-haupt);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.reihenfolge-add-btn:hover {
+  background: var(--farbe-haupt-hell);
+}
+
+/* ---------- Zweisprachige Karten ---------- */
+
+.zweisprachig-felder {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+}
+
+@media (min-width: 680px) {
+  .zweisprachig-felder {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.sprach-spalte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sprach-titel {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--farbe-haupt);
+}
+
+.sprach-titel--2 {
+  color: #1f5f99;
+}
+
+.karten-text--lang2 {
+  border-color: #b7d2ef;
+  background: #f8fbff;
+}
+
+/* ---------- Vorschau: Sprachen-Umschalter ---------- */
+
+.vorschau-kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.vorschau-kopf .vorschau-titel {
+  margin-bottom: 0;
+}
+
+.vorschau-sprachen {
+  display: inline-flex;
+  border: 2px solid var(--farbe-haupt);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.vorschau-sprachen button {
+  min-height: 34px;
+  padding: 0.15rem 0.55rem;
+  border: none;
+  background: var(--farbe-karte);
+  color: var(--farbe-haupt);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.vorschau-sprachen button.aktiv {
+  background: var(--farbe-haupt);
+  color: #fff;
+}

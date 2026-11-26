@@ -11,6 +11,8 @@ import {
   formatSectionNameForFile,
   getHeaderValue,
   isNativeSongBeamerMarker,
+  isSongBilingual,
+  mergePartLanguages,
   nameForNewPart,
   nextPartId,
   parseSectionName,
@@ -18,6 +20,7 @@ import {
   partDisplayName,
   serializeSong,
   sngFilename,
+  splitPartLanguages,
   validateSong,
   validateSongDetailed,
 } from '../src/sng';
@@ -210,8 +213,10 @@ describe('Kopfzeilen', () => {
     expect(text).toContain('#VerseOrder=Verse 1,Chorus,Verse 2,Chorus,Bridge');
   });
 
-  it('bearbeitete Kopfdaten: #Title zuerst, dann Bekannte, dann Unbekannte in Reihenfolge', () => {
+  it('bearbeitete Kopfdaten: #Title zuerst, dann Bekannte (inkl. #Key, #VerseOrder), dann Unbekannte', () => {
     const { song } = parseSongBytes(fixtureBytes('beispiel-unbekannte-kopfzeilen.sng'));
+    expect(song.header.key).toBe('F#m');
+    expect(song.verseOrder).toEqual(['Verse 1', 'Chorus', 'Verse 2', 'Chorus', 'Bridge']);
     const geaendert: Song = {
       ...song,
       header: { ...song.header, title: 'Neuer Titel', author: 'Neuer Autor' },
@@ -220,37 +225,81 @@ describe('Kopfzeilen', () => {
     const lines = serializeSong(geaendert).split('\n');
     expect(lines[0]).toBe('#Title=Neuer Titel');
     expect(lines[1]).toBe('#Author=Neuer Autor');
-    const editorIdx = lines.findIndex((l) => l.startsWith('#Editor='));
-    const keyIdx = lines.findIndex((l) => l.startsWith('#Key='));
-    expect(editorIdx).toBeGreaterThan(1);
-    expect(keyIdx).toBeGreaterThan(editorIdx);
-    // Unbekannte bleiben in ursprünglicher Abfolge (CCLI ist bekannt und
-    // steht daher direkt nach den bearbeiteten Feldern)
     expect(lines[2]).toBe('#CCLI=858299');
-    expect(lines[editorIdx + 1]).toBe('#Key=F#m');
-    expect(lines[keyIdx + 1]).toBe('#VerseOrder=Verse 1,Chorus,Verse 2,Chorus,Bridge');
+    expect(lines[3]).toBe('#Key=F#m');
+    expect(lines[4]).toBe('#VerseOrder=Verse 1,Chorus,Verse 2,Chorus,Bridge');
+    const editorIdx = lines.findIndex((l) => l.startsWith('#Editor='));
+    expect(editorIdx).toBeGreaterThan(4);
   });
 
-  it('#Songbook wird als Liednummer gelesen und bei Buchstaben als #Songbook geschrieben', () => {
+  it('#Songbook hat eigenes Feld und #Time / #Key / #Tempo / #VerseOrder bleiben vollständig bearbeitbar', () => {
     const { song } = parseSongBytes(fixtureBytes('beispiel-custom-marker.sng'));
-    expect(song.header.songNumber).toBe('EG 331');
-    const edited: Song = { ...song, headerDirty: true };
-    expect(serializeSong(edited)).toContain('#Songbook=EG 331');
+    expect(song.header.songbook).toBe('EG 331');
+    const edited: Song = {
+      ...song,
+      header: { ...song.header, key: 'Bbm', timeSignature: '4/4', tempo: '92' },
+      verseOrder: ['Vers 1', 'Pre-Bridge', 'Solo Gitarre'],
+      headerDirty: true,
+    };
+    const out = serializeSong(edited);
+    expect(out).toContain('#Songbook=EG 331');
+    expect(out).toContain('#Key=Bbm');
+    expect(out).toContain('#Time=4/4');
+    expect(out).toContain('#Tempo=92');
+    expect(out).toContain('#VerseOrder=Vers 1,Pre-Bridge,Solo Gitarre');
+  });
 
-    const neu = createEmptySong();
-    neu.header.title = 'Loblied';
-    neu.header.songNumber = 'EG 331';
-    expect(serializeSong(neu)).toContain('#Songbook=EG 331');
-
-    neu.header.songNumber = '2564128';
-    expect(serializeSong(neu)).toContain('#CCLI=2564128');
+  it('Chor wird als eigener Teilname erkannt', () => {
+    expect(parseSectionName('Chor')?.type).toBe('weiterer');
+    expect(isNativeSongBeamerMarker('Chor')).toBe(true);
   });
 
   it('LangCount wird erkannt (Mehrsprachigkeit)', () => {
     const { song } = parseSongBytes(fixtureBytes('beispiel-mehrsprachig.sng'));
+    expect(song.langCount).toBe(2);
     expect(getHeaderValue(song, 'langcount')).toBe('2');
     // #H-Zeilen im Text bleiben Textzeilen
     expect(song.parts[2].lines[0]).toBe('#H Hinweis: Zweite Strophe ruhig begleiten');
+  });
+});
+
+describe('Zweisprachige Lieder (Aufteilen & Zusammenführen)', () => {
+  it('erkennt und bearbeitet sowohl abwechselnde Zeilen (#LangCount=2) als auch ##2-Stil', () => {
+    const { song } = parseSongBytes(fixtureBytes('beispiel-mehrsprachig.sng'));
+    expect(isSongBilingual(song)).toBe(true);
+    const splitAlt = splitPartLanguages(song.parts[0], song.langCount);
+    expect(splitAlt.style).toBe('alternating');
+    expect(splitAlt.lang1[0]).toBe('Nearer, my God, to Thee');
+    expect(splitAlt.lang2[0]).toBe('Näher, mein Gott, zu dir');
+
+    const mergedAlt = mergePartLanguages(
+      ['Zeile 1 DE', 'Zeile 2 DE'],
+      ['Line 1 EN', 'Line 2 EN'],
+      'alternating',
+    );
+    expect(mergedAlt).toEqual(['Zeile 1 DE', 'Line 1 EN', 'Zeile 2 DE', 'Line 2 EN']);
+
+    // ChurchTools-Stil mit ##2 (wie bei zweisprachigen Exporten mit #LangCount=1)
+    const partPrefixed: Part = {
+      id: 'b1',
+      type: 'strophe',
+      name: 'Verse 1',
+      lines: ['Amazing grace', '##2 Es klingt zu gut', '', 'That saved a wretch', '##2 die Gnade fand'],
+      origin: 'datei',
+    };
+    const splitPref = splitPartLanguages(partPrefixed, 1);
+    expect(splitPref.style).toBe('prefixed');
+    expect(splitPref.lang1).toEqual(['Amazing grace', '', 'That saved a wretch']);
+    expect(splitPref.lang2).toEqual(['Es klingt zu gut', '', 'die Gnade fand']);
+
+    const mergedPref = mergePartLanguages(splitPref.lang1, splitPref.lang2, 'prefixed');
+    expect(mergedPref).toEqual([
+      'Amazing grace',
+      '##2 Es klingt zu gut',
+      '',
+      'That saved a wretch',
+      '##2 die Gnade fand',
+    ]);
   });
 });
 

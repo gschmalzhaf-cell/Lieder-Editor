@@ -86,4 +86,50 @@ describe('Oberfläche (Smoke-Tests)', () => {
     expect(html).toContain('Refrain hinzufügen');
     expect(html).toContain('Weiteres Teil');
   });
+
+  it('Editor zeigt Abspielreihenfolge (VerseOrder) und zweisprachige Eingabefelder ohne Roh-Präfixe', () => {
+    const song = createEmptySong();
+    song.header.title = 'Zweisprachiges Lied';
+    song.header.key = 'Bbm';
+    song.header.timeSignature = '4/4';
+    song.langCount = 2;
+    song.verseOrder = ['Vers 1', 'Refrain', 'Vers 1'];
+    song.parts.push(
+      {
+        id: 'p1',
+        type: 'strophe',
+        name: 'Vers 1',
+        lines: ['Amazing grace', '##2 Es klingt zu gut'],
+        origin: 'datei',
+      },
+      {
+        id: 'p2',
+        type: 'refrain',
+        name: 'Refrain',
+        lines: ['My chains are gone', '##2 Die Ketten los'],
+        origin: 'datei',
+      },
+    );
+    const html = renderToString(
+      createElement(Editor, {
+        history: {
+          song,
+          commit: () => {},
+          undo: () => {},
+          redo: () => {},
+          canUndo: false,
+          canRedo: false,
+          reset: () => {},
+        },
+        onExit: () => {},
+      }),
+    );
+    expect(html).toContain('Abspielreihenfolge');
+    expect(html).toContain('Sprache 1');
+    expect(html).toContain('Sprache 2 (Übersetzung)');
+    expect(html).toContain('Titel (2. Sprache, freiwillig)');
+    expect(html).toContain('2 ausgefüllt');
+    // Leitprinzip: ##2 darf niemals sichtbar im Textfeld erscheinen
+    expect(html).not.toContain('##2');
+  });
 });

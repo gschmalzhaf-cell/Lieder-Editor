@@ -1,4 +1,4 @@
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { buildPreviewLines, partDisplayName } from '../sng';
 import type { Part, PreviewSpan } from '../sng';
 
@@ -6,8 +6,11 @@ interface Props {
   parts: Part[];
   index: number;
   langCount?: number;
+  bilingual?: boolean;
   onNavigate: (delta: number) => void;
 }
+
+type LangFilter = 'all' | '1' | '2';
 
 function renderSpan(span: PreviewSpan, key: number) {
   let node: React.ReactNode = span.text;
@@ -17,10 +20,23 @@ function renderSpan(span: PreviewSpan, key: number) {
   return <Fragment key={key}>{node}</Fragment>;
 }
 
-export default function Preview({ parts, index, langCount = 1, onNavigate }: Props) {
+export default function Preview({
+  parts,
+  index,
+  langCount = 1,
+  bilingual = false,
+  onNavigate,
+}: Props) {
+  const [langFilter, setLangFilter] = useState<LangFilter>('all');
   const part = parts.length > 0 ? parts[Math.min(index, parts.length - 1)] : null;
   const safeIndex = parts.length > 0 ? Math.min(index, parts.length - 1) : 0;
-  const previewLines = part ? buildPreviewLines(part.lines, langCount) : [];
+  const allPreviewLines = part ? buildPreviewLines(part.lines, langCount) : [];
+  const previewLines =
+    bilingual && langFilter !== 'all'
+      ? allPreviewLines.filter(
+          (l) => l.kind !== 'text' || l.subtitle || l.lang === Number(langFilter),
+        )
+      : allPreviewLines;
   const textLineCount = previewLines.filter((l) => l.kind === 'text').length;
 
   const sizeClass =
@@ -32,7 +48,34 @@ export default function Preview({ parts, index, langCount = 1, onNavigate }: Pro
 
   return (
     <aside className="vorschau" aria-label="Vorschau der Folie">
-      <h2 className="vorschau-titel">Vorschau</h2>
+      <div className="vorschau-kopf">
+        <h2 className="vorschau-titel">Vorschau</h2>
+        {bilingual && (
+          <div className="vorschau-sprachen" role="group" aria-label="Sprachen in der Vorschau">
+            <button
+              type="button"
+              className={langFilter === 'all' ? 'aktiv' : ''}
+              onClick={() => setLangFilter('all')}
+            >
+              Beide
+            </button>
+            <button
+              type="button"
+              className={langFilter === '1' ? 'aktiv' : ''}
+              onClick={() => setLangFilter('1')}
+            >
+              1
+            </button>
+            <button
+              type="button"
+              className={langFilter === '2' ? 'aktiv' : ''}
+              onClick={() => setLangFilter('2')}
+            >
+              2
+            </button>
+          </div>
+        )}
+      </div>
       <div className={`folie${sizeClass}`} aria-live="polite">
         {part ? (
           previewLines.length > 0 ? (
@@ -49,7 +92,7 @@ export default function Preview({ parts, index, langCount = 1, onNavigate }: Pro
               }
               const classes = [
                 line.subtitle ? 'folie-untertitel' : '',
-                langCount > 1 && line.lang === 2 ? 'folie-sprache-2' : '',
+                line.lang >= 2 ? 'folie-sprache-2' : '',
               ]
                 .filter(Boolean)
                 .join(' ');

@@ -35,6 +35,7 @@ const NATIVE_FIXED_NAMES: Record<string, PartType> = {
   misc: 'weiterer',
   coda: 'weiterer',
   tag: 'weiterer',
+  chor: 'weiterer',
 };
 
 /**
@@ -224,15 +225,19 @@ export function partIcon(type: PartType): string {
 /** Wahlmöglichkeiten im Menü „Weiteres Teil“. */
 export const WEITERE_TEILE: { label: string; type: PartType }[] = [
   { label: 'Bridge', type: 'bridge' },
+  { label: 'Pre-Refrain', type: 'weiterer' },
+  { label: 'Pre-Bridge', type: 'weiterer' },
   { label: 'Intro', type: 'intro' },
   { label: 'Schluss', type: 'schluss' },
   { label: 'Zwischenspiel', type: 'zwischenspiel' },
+  { label: 'Instrumental', type: 'zwischenspiel' },
+  { label: 'Chor', type: 'weiterer' },
   { label: 'Gesprochener Text', type: 'weiterer' },
   { label: 'Antwort', type: 'weiterer' },
   { label: 'Solo', type: 'weiterer' },
-  { label: 'Pre-Refrain', type: 'weiterer' },
   { label: 'Tag', type: 'weiterer' },
   { label: 'Coda', type: 'weiterer' },
+  { label: 'Pre-Coda', type: 'weiterer' },
   { label: 'Übergang', type: 'weiterer' },
   { label: 'Eigenes Teil', type: 'weiterer' },
 ];

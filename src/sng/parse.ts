@@ -11,16 +11,29 @@ import type { HeaderFields, Part, PartType, Song } from './types';
  */
 const KNOWN_HEADER_FIELDS: Record<string, keyof HeaderFields> = {
   title: 'title',
+  titlelang2: 'titleLang2',
+  otitle: 'originalTitle',
   author: 'author',
   melody: 'melody',
+  translation: 'translation',
   ccli: 'songNumber',
   songnumber: 'songNumber',
+  songbook: 'songbook',
+  churchsongid: 'churchSongId',
   '(c)': 'copyright',
   copyright: 'copyright',
+  rights: 'rights',
+  key: 'key',
+  time: 'timeSignature',
+  timesignature: 'timeSignature',
+  tempo: 'tempo',
+  categories: 'categories',
+  keywords: 'keywords',
+  bible: 'bible',
   comment: 'notes',
 };
 
-const FALLBACK_SONG_NUMBER_KEYS = new Set(['songbook', 'churchsongid']);
+const MANAGED_SPECIAL_KEYS = new Set(['langcount', 'verseorder']);
 
 export function parseHeaderKey(line: string): { key: string; value: string } | null {
   if (!line.startsWith('#')) return null;
@@ -29,10 +42,9 @@ export function parseHeaderKey(line: string): { key: string; value: string } | n
   return { key: line.slice(1, eq).trim(), value: line.slice(eq + 1) };
 }
 
-export function isKnownHeaderKey(key: string, songNumberKey?: string): boolean {
+export function isKnownHeaderKey(key: string): boolean {
   const lower = key.toLowerCase();
-  if (songNumberKey && lower === songNumberKey.toLowerCase()) return true;
-  return Object.hasOwn(KNOWN_HEADER_FIELDS, lower);
+  return Object.hasOwn(KNOWN_HEADER_FIELDS, lower) || MANAGED_SPECIAL_KEYS.has(lower);
 }
 
 /** Wert einer Kopfzeile aus den Rohzeilen holen (z. B. langcount). */
@@ -54,8 +66,9 @@ export function parseSong(text: string, opts?: { utf8Bom?: boolean }): Song {
   const lines = splitLines(text);
   const headerRaw: string[] = [];
   const header = emptyHeader();
-  let songNumberKey: string | undefined;
-  let fallbackSongNumber: { key: string; value: string } | null = null;
+  let timeSignatureKey: string | undefined;
+  let langCount = 1;
+  let verseOrder: string[] = [];
 
   let i = 0;
   while (i < lines.length && lines[i] !== '---') {
@@ -63,20 +76,23 @@ export function parseSong(text: string, opts?: { utf8Bom?: boolean }): Song {
     const kv = parseHeaderKey(lines[i]);
     if (kv) {
       const lower = kv.key.toLowerCase();
-      const field = KNOWN_HEADER_FIELDS[lower];
-      if (field && header[field] === '') {
-        header[field] = kv.value;
-        if (field === 'songNumber') songNumberKey = kv.key;
-      } else if (FALLBACK_SONG_NUMBER_KEYS.has(lower) && !fallbackSongNumber && kv.value.trim() !== '') {
-        fallbackSongNumber = { key: kv.key, value: kv.value };
+      if (lower === 'langcount') {
+        const parsed = Number.parseInt(kv.value.trim(), 10);
+        if (Number.isFinite(parsed) && parsed >= 1) langCount = parsed;
+      } else if (lower === 'verseorder') {
+        verseOrder = kv.value
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s !== '');
+      } else {
+        const field = KNOWN_HEADER_FIELDS[lower];
+        if (field && header[field] === '') {
+          header[field] = kv.value;
+          if (field === 'timeSignature') timeSignatureKey = kv.key;
+        }
       }
     }
     i += 1;
-  }
-
-  if (header.songNumber === '' && fallbackSongNumber) {
-    header.songNumber = fallbackSongNumber.value;
-    songNumberKey = fallbackSongNumber.key;
   }
 
   const parts: Part[] = [];
@@ -104,7 +120,9 @@ export function parseSong(text: string, opts?: { utf8Bom?: boolean }): Song {
   return {
     header,
     headerRaw,
-    songNumberKey,
+    timeSignatureKey,
+    langCount,
+    verseOrder,
     headerDirty: false,
     parts,
     lineEnding: detectLineEnding(text),

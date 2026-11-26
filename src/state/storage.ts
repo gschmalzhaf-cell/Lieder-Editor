@@ -1,3 +1,4 @@
+import { emptyHeader } from '../sng/types';
 import type { Song } from '../sng/types';
 
 const KEY = 'lieder-editor:stand';
@@ -7,7 +8,7 @@ export function saveStand(song: Song): void {
   try {
     localStorage.setItem(
       KEY,
-      JSON.stringify({ version: 1, savedAt: new Date().toISOString(), song }),
+      JSON.stringify({ version: 2, savedAt: new Date().toISOString(), song }),
     );
   } catch {
     // Speicher voll oder nicht verfügbar – dann einfach nicht zwischenspeichern.
@@ -28,8 +29,14 @@ export function loadStandWithMeta(): StoredStand | null {
     if (!song || typeof song !== 'object' || !song.header || !Array.isArray(song.parts)) {
       return null;
     }
+    const normalized: Song = {
+      ...song,
+      header: { ...emptyHeader(), ...song.header },
+      langCount: typeof song.langCount === 'number' && song.langCount >= 1 ? song.langCount : 1,
+      verseOrder: Array.isArray(song.verseOrder) ? song.verseOrder : [],
+    };
     return {
-      song,
+      song: normalized,
       savedAt: typeof data.savedAt === 'string' ? data.savedAt : null,
     };
   } catch {
