@@ -1,12 +1,17 @@
 :root {
-  --farbe-haupt: #3b4a8c;
-  --farbe-haupt-dunkel: #2c3866;
-  --farbe-erfolg: #1e7d46;
+  --farbe-haupt: #33458a;
+  --farbe-haupt-dunkel: #25336a;
+  --farbe-haupt-hell: #eef1fb;
+  --farbe-erfolg: #1b7340;
   --farbe-fehler: #b3261e;
-  --farbe-text: #1c1c1e;
-  --farbe-hintergrund: #f4f5f9;
+  --farbe-text: #1b1d24;
+  --farbe-text-leise: #555b6e;
+  --farbe-hintergrund: #f5f6fa;
   --farbe-karte: #ffffff;
+  --farbe-rand: #d6dae8;
   --radius: 12px;
+  --schatten-karte: 0 2px 6px rgba(24, 34, 68, 0.06);
+  --schatten-schwebend: 0 10px 24px rgba(24, 34, 68, 0.16);
 }
 
 * {
@@ -31,6 +36,7 @@ body {
   color: var(--farbe-text);
   background: var(--farbe-hintergrund);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
@@ -38,7 +44,8 @@ body {
 }
 
 h1 {
-  font-size: 1.9rem;
+  font-size: 1.95rem;
+  letter-spacing: -0.015em;
   margin: 0 0 0.75rem;
 }
 
@@ -57,14 +64,25 @@ textarea {
 
 button {
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease,
+    box-shadow 0.15s ease;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 0.48;
 }
 
-:focus-visible {
+:focus-visible,
+.datei-knopf:focus-within,
+.weiteres:focus-within {
   outline: 3px solid var(--farbe-haupt);
   outline-offset: 2px;
 }
@@ -72,7 +90,7 @@ button:disabled {
 /* ---------- Startseite & Wiederherstellen ---------- */
 
 .start {
-  max-width: 640px;
+  max-width: 660px;
   margin: 0 auto;
   padding: 3rem 1.25rem;
   text-align: center;
@@ -86,12 +104,31 @@ button:disabled {
   outline: 4px dashed var(--farbe-haupt);
   outline-offset: -12px;
   border-radius: var(--radius);
+  background: var(--farbe-haupt-hell);
 }
 
 .erklaerung {
   font-size: 1.1rem;
+  color: var(--farbe-text-leise);
   margin: 0 auto 2rem;
   max-width: 34rem;
+}
+
+.entwurf-info {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0 auto 1.75rem;
+  padding: 0.9rem 1.4rem;
+  background: var(--farbe-karte);
+  border: 1px solid var(--farbe-rand);
+  border-radius: var(--radius);
+  box-shadow: var(--schatten-karte);
+}
+
+.entwurf-info span {
+  font-size: 0.95rem;
+  color: var(--farbe-text-leise);
 }
 
 .start-knoepfe {
@@ -103,21 +140,29 @@ button:disabled {
 
 .tipp {
   margin-top: 1.5rem;
-  color: #555;
+  color: var(--farbe-text-leise);
+  font-size: 0.98rem;
 }
 
 .gross {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 56px;
   min-width: 200px;
-  padding: 0.8rem 1.6rem;
-  font-size: 1.15rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.12rem;
   font-weight: 600;
   border-radius: var(--radius);
   border: 2px solid var(--farbe-haupt);
   background: var(--farbe-karte);
   color: var(--farbe-haupt);
   text-align: center;
+  box-shadow: var(--schatten-karte);
+}
+
+.gross:hover:not(:disabled) {
+  background: var(--farbe-haupt-hell);
 }
 
 .gross.primaer,
@@ -127,7 +172,14 @@ button:disabled {
   border-color: var(--farbe-haupt);
 }
 
+.gross.primaer:hover:not(:disabled),
+.primaer:hover:not(:disabled) {
+  background: var(--farbe-haupt-dunkel);
+  border-color: var(--farbe-haupt-dunkel);
+}
+
 .datei-knopf {
+  position: relative;
   cursor: pointer;
 }
 
@@ -153,13 +205,29 @@ button:disabled {
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0 0.75rem;
+  border-bottom: 1px solid var(--farbe-rand);
+  margin-bottom: 0.5rem;
+}
+
+.kopf-links {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .app-name {
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
+  margin: 0;
   color: var(--farbe-haupt);
+}
+
+.gesichert-hinweis {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--farbe-erfolg);
 }
 
 .kopf-aktionen {
@@ -170,7 +238,7 @@ button:disabled {
 
 .kopf-aktionen button {
   min-height: 44px;
-  padding: 0.45rem 0.9rem;
+  padding: 0.45rem 0.95rem;
   border-radius: 10px;
   border: 2px solid var(--farbe-haupt);
   background: var(--farbe-karte);
@@ -178,9 +246,18 @@ button:disabled {
   font-weight: 600;
 }
 
+.kopf-aktionen button:hover:not(:disabled) {
+  background: var(--farbe-haupt-hell);
+}
+
 .kopf-aktionen .primaer {
   background: var(--farbe-haupt);
   color: #fff;
+}
+
+.kopf-aktionen .primaer:hover:not(:disabled) {
+  background: var(--farbe-haupt-dunkel);
+  border-color: var(--farbe-haupt-dunkel);
 }
 
 /* ---------- Meldungen ---------- */
@@ -189,18 +266,18 @@ button:disabled {
 .erfolg,
 .pruefung {
   border-radius: var(--radius);
-  padding: 0.8rem 1rem;
+  padding: 0.85rem 1.05rem;
   margin: 0.75rem 0;
   max-width: 100%;
 }
 
 .hinweis {
-  background: #fff8e1;
-  border: 2px solid #e0a800;
+  background: #fff9e6;
+  border: 2px solid #d99b00;
 }
 
 .erfolg {
-  background: #e6f4ea;
+  background: #e7f5ec;
   border: 2px solid var(--farbe-erfolg);
   color: var(--farbe-erfolg);
   font-weight: 600;
@@ -213,36 +290,57 @@ button:disabled {
 
 .pruefung h2 {
   color: var(--farbe-fehler);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
 }
 
 .pruefung ul {
   margin: 0;
-  padding-left: 1.3rem;
+  padding-left: 1.25rem;
+}
+
+.pruefung li {
+  margin-bottom: 0.25rem;
+}
+
+.pruefung-link {
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  text-align: left;
+  color: var(--farbe-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-weight: 500;
+}
+
+.pruefung-link:hover {
+  color: var(--farbe-fehler);
 }
 
 /* ---------- Kopfdaten ---------- */
 
 .kopfdaten {
   background: var(--farbe-karte);
+  border: 1px solid var(--farbe-rand);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: 1.05rem;
   margin: 0.75rem 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--schatten-karte);
 }
 
 .titel-feld input {
   width: 100%;
-  font-size: 1.4rem;
+  font-size: 1.38rem;
   font-weight: 700;
-  padding: 0.6rem 0.8rem;
+  padding: 0.6rem 0.85rem;
   border: 2px solid var(--farbe-haupt);
   border-radius: 10px;
+  background: #fff;
 }
 
 .kopfdaten-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 0.75rem;
   margin-top: 0.9rem;
 }
@@ -250,11 +348,12 @@ button:disabled {
 .feld-name {
   display: block;
   font-weight: 600;
+  font-size: 0.95rem;
   margin-bottom: 0.25rem;
 }
 
 .pflicht {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--farbe-fehler);
   border: 1px solid var(--farbe-fehler);
@@ -266,16 +365,22 @@ button:disabled {
 
 .feld input {
   width: 100%;
-  padding: 0.55rem 0.7rem;
-  border: 2px solid #c9cede;
+  padding: 0.55rem 0.75rem;
+  border: 2px solid var(--farbe-rand);
   border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.feld input:focus {
+  border-color: var(--farbe-haupt);
 }
 
 /* ---------- Arbeitsfläche ---------- */
 
 .arbeitsflaeche {
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
   grid-template-columns: 1fr;
   margin-top: 0.75rem;
   align-items: start;
@@ -283,7 +388,7 @@ button:disabled {
 
 @media (min-width: 940px) {
   .arbeitsflaeche {
-    grid-template-columns: minmax(0, 1fr) 320px;
+    grid-template-columns: minmax(0, 1fr) 330px;
   }
 
   .vorschau {
@@ -296,8 +401,9 @@ button:disabled {
 
 .hinzufuegen {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
+  margin-top: 0.4rem;
   margin-bottom: 0.9rem;
 }
 
@@ -308,11 +414,13 @@ button:disabled {
 
 .weiteres {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 1 1 180px;
   min-height: 56px;
-  padding: 0.8rem 1.6rem;
-  font-size: 1.15rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.12rem;
   font-weight: 600;
   border-radius: var(--radius);
   border: 2px solid var(--farbe-haupt);
@@ -320,6 +428,11 @@ button:disabled {
   color: var(--farbe-haupt);
   text-align: center;
   cursor: pointer;
+  box-shadow: var(--schatten-karte);
+}
+
+.weiteres:hover {
+  background: var(--farbe-haupt-hell);
 }
 
 .weiteres select {
@@ -333,10 +446,12 @@ button:disabled {
 
 .leer-hinweis {
   background: var(--farbe-karte);
-  border: 2px dashed #c9cede;
+  border: 2px dashed var(--farbe-rand);
   border-radius: var(--radius);
-  padding: 1.2rem;
+  padding: 1.35rem 1.1rem;
+  margin: 0 0 0.9rem;
   text-align: center;
+  color: var(--farbe-text-leise);
 }
 
 /* ---------- Karten ---------- */
@@ -344,43 +459,47 @@ button:disabled {
 .karte {
   background: var(--farbe-karte);
   border-radius: var(--radius);
-  border: 1px solid #dfe1ea;
+  border: 1px solid var(--farbe-rand);
   border-left: 8px solid #999;
-  padding: 0.75rem 0.9rem;
+  padding: 0.8rem 0.95rem;
   margin-bottom: 0.9rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--schatten-karte);
+  transition:
+    box-shadow 0.15s ease,
+    outline-color 0.15s ease;
 }
 
 .karte--strophe {
-  border-left-color: #3b6ea5;
+  border-left-color: #2f669f;
 }
 .karte--refrain {
   border-left-color: #c0392b;
 }
 .karte--bridge {
-  border-left-color: #8e44ad;
+  border-left-color: #7d3c98;
 }
 .karte--intro {
-  border-left-color: #16a085;
+  border-left-color: #148f77;
 }
 .karte--schluss {
-  border-left-color: #d35400;
+  border-left-color: #ca5310;
 }
 .karte--zwischenspiel {
-  border-left-color: #27ae60;
+  border-left-color: #238c50;
 }
 .karte--weiterer {
-  border-left-color: #7f8c8d;
+  border-left-color: #6c7a89;
 }
 
 .karte.ausgewaehlt {
   outline: 3px solid var(--farbe-haupt);
   outline-offset: 1px;
+  box-shadow: 0 4px 14px rgba(51, 69, 138, 0.12);
 }
 
 .karte.zieht {
-  opacity: 0.85;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+  opacity: 0.9;
+  box-shadow: var(--schatten-schwebend);
 }
 
 .karten-kopf {
@@ -388,7 +507,7 @@ button:disabled {
   align-items: center;
   gap: 0.55rem;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.55rem;
 }
 
 .griff {
@@ -397,30 +516,44 @@ button:disabled {
   font-size: 1.4rem;
   line-height: 1;
   border-radius: 10px;
-  border: 2px solid #c9cede;
-  background: #f0f1f6;
+  border: 2px solid var(--farbe-rand);
+  background: #f2f4f9;
   touch-action: none;
+  cursor: grab;
+}
+
+.griff:active {
+  cursor: grabbing;
+}
+
+.griff:hover {
+  background: var(--farbe-haupt-hell);
+  border-color: var(--farbe-haupt);
 }
 
 .symbol {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
 }
 
 .karten-name {
   background: none;
   border: none;
-  padding: 0.3rem 0.2rem;
-  font-size: 1.2rem;
+  padding: 0.3rem 0.45rem;
+  font-size: 1.18rem;
   font-weight: 700;
   text-align: left;
   border-radius: 8px;
 }
 
+.karten-name:hover {
+  background: var(--farbe-haupt-hell);
+}
+
 .karten-name-input {
   flex: 1 1 160px;
-  font-size: 1.2rem;
+  font-size: 1.18rem;
   font-weight: 700;
-  padding: 0.3rem 0.5rem;
+  padding: 0.3rem 0.55rem;
   border: 2px solid var(--farbe-haupt);
   border-radius: 8px;
 }
@@ -428,38 +561,50 @@ button:disabled {
 .abzeichen {
   font-size: 0.8rem;
   font-weight: 700;
-  background: #eceafe;
+  background: var(--farbe-haupt-hell);
   color: var(--farbe-haupt);
   border-radius: 999px;
-  padding: 0.15rem 0.6rem;
+  padding: 0.15rem 0.65rem;
 }
 
 .karten-text {
   width: 100%;
   resize: vertical;
-  min-height: 90px;
-  padding: 0.6rem 0.7rem;
-  border: 2px solid #c9cede;
+  min-height: 92px;
+  padding: 0.65rem 0.75rem;
+  border: 2px solid var(--farbe-rand);
   border-radius: 10px;
   font-size: 1.05rem;
-  line-height: 1.45;
+  line-height: 1.48;
   white-space: pre-wrap;
+  background: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.karten-text:focus {
+  border-color: var(--farbe-haupt);
 }
 
 .karten-aktionen {
   display: flex;
   gap: 0.45rem;
   flex-wrap: wrap;
-  margin-top: 0.6rem;
+  margin-top: 0.65rem;
 }
 
 .karten-aktionen button {
   min-height: 44px;
   padding: 0.35rem 0.8rem;
   border-radius: 10px;
-  border: 2px solid #c9cede;
-  background: #f0f1f6;
+  border: 2px solid var(--farbe-rand);
+  background: #f2f4f9;
   font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.karten-aktionen button:hover:not(:disabled) {
+  background: var(--farbe-haupt-hell);
+  border-color: var(--farbe-haupt);
 }
 
 .karten-aktionen .loeschen-bestaetigt {
@@ -468,17 +613,23 @@ button:disabled {
   color: #fff;
 }
 
+.karten-aktionen .loeschen-bestaetigt:hover:not(:disabled) {
+  background: #911c16;
+  border-color: #911c16;
+}
+
 /* ---------- Vorschau ---------- */
 
 .vorschau {
   background: var(--farbe-karte);
+  border: 1px solid var(--farbe-rand);
   border-radius: var(--radius);
-  padding: 0.9rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 0.95rem;
+  box-shadow: var(--schatten-karte);
 }
 
 .vorschau-titel {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.65rem;
   color: var(--farbe-haupt);
 }
 
@@ -487,28 +638,75 @@ button:disabled {
   width: 100%;
   max-width: 300px;
   margin: 0 auto;
-  background: linear-gradient(160deg, #1d2b64 0%, #101a3d 100%);
+  background: linear-gradient(160deg, #1b2859 0%, #0e1635 100%);
   color: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 1rem;
-  overflow: hidden;
+  padding: 1.05rem;
+  overflow-y: auto;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .folie p {
   margin: 0;
-  font-size: clamp(1.05rem, 4.5vw, 1.45rem);
+  font-size: clamp(1rem, 4.2vw, 1.38rem);
   font-weight: 600;
   line-height: 1.35;
   overflow-wrap: anywhere;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.folie--kompakt p {
+  font-size: clamp(0.88rem, 3.4vw, 1.12rem);
+  line-height: 1.3;
+}
+
+.folie--sehr-kompakt p {
+  font-size: clamp(0.78rem, 2.8vw, 0.96rem);
+  line-height: 1.25;
 }
 
 .folie p.leer {
-  height: 1.1em;
+  height: 0.85em;
+}
+
+.folie p.folie-untertitel {
+  font-size: 0.85em;
+  opacity: 0.85;
+  letter-spacing: 0.02em;
+}
+
+.folie p.folie-sprache-2 {
+  color: #b7d9ff;
+  font-weight: 500;
+}
+
+.folie p.folie-platzhalter {
+  font-size: 1rem;
+  font-weight: 500;
+  opacity: 0.72;
+}
+
+.folie-umbruch {
+  width: 65%;
+  border: none;
+  border-top: 2px dashed rgba(255, 255, 255, 0.38);
+  margin: 0.55rem 0;
+}
+
+.vorschau-tipp {
+  margin: 0.65rem 0 0;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  background: #fff9e6;
+  border: 1px solid #e0b84c;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: var(--farbe-text);
 }
 
 .folien-nav {
@@ -516,7 +714,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  margin-top: 0.7rem;
+  margin-top: 0.75rem;
   flex-wrap: wrap;
 }
 
@@ -530,8 +728,13 @@ button:disabled {
   font-weight: 600;
 }
 
+.folien-nav button:hover:not(:disabled) {
+  background: var(--farbe-haupt-hell);
+}
+
 .folien-stand {
   font-weight: 600;
+  font-size: 0.92rem;
   text-align: center;
   flex: 1 1 120px;
 }

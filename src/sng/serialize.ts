@@ -1,3 +1,4 @@
+import { formatSectionNameForFile } from './names';
 import { isKnownHeaderKey, parseHeaderKey, getHeaderValue } from './parse';
 import type { HeaderFields, Song } from './types';
 
@@ -24,6 +25,17 @@ function oneLine(value: string): string {
   return value.replace(/[\r\n]+/g, ' ');
 }
 
+function resolveSongNumberKey(song: Song, value: string): string {
+  if (song.songNumberKey) {
+    const lower = song.songNumberKey.toLowerCase();
+    if (lower === 'songbook') return 'Songbook';
+    if (lower === 'churchsongid') return 'ChurchSongID';
+    if (lower === 'ccli') return 'CCLI';
+  }
+  // Reine Ziffern -> #CCLI, Liederbuch-Angaben mit Buchstaben (z. B. „EG 331“) -> #Songbook
+  return /^\d+$/.test(value.trim()) ? 'CCLI' : 'Songbook';
+}
+
 /**
  * Kopfzeilen neu aufbauen (nach Änderung im Editor):
  * #Title zuerst, dann die weiteren bekannten Angaben, danach die
@@ -33,11 +45,14 @@ export function buildHeaderLines(song: Song): string[] {
   const lines: string[] = [];
   for (const field of HEADER_ORDER) {
     const value = song.header[field];
-    if (value.trim() !== '') lines.push(`#${HEADER_KEY[field]}=${oneLine(value)}`);
+    if (value.trim() !== '') {
+      const key = field === 'songNumber' ? resolveSongNumberKey(song, value) : HEADER_KEY[field];
+      lines.push(`#${key}=${oneLine(value)}`);
+    }
   }
   for (const raw of song.headerRaw) {
     const kv = parseHeaderKey(raw);
-    if (kv && isKnownHeaderKey(kv.key)) continue;
+    if (kv && isKnownHeaderKey(kv.key, song.songNumberKey)) continue;
     lines.push(raw);
   }
   if (getHeaderValue(song, 'langcount') === null) lines.push('#LangCount=1');
@@ -56,7 +71,10 @@ export function serializeSong(song: Song): string {
   out.push(...(song.headerDirty ? buildHeaderLines(song) : song.headerRaw));
   for (const part of song.parts) {
     out.push('---');
-    if (part.name !== null && part.name.trim() !== '') out.push(part.name);
+    if (part.name !== null && part.name.trim() !== '') {
+      // Unveränderte Dateiteile bleiben byte-identisch; neue/umbenannte Teile bekommen ggf. $$M=
+      out.push(part.origin === 'datei' ? part.name : formatSectionNameForFile(part.name));
+    }
     out.push(...part.lines);
   }
   if (song.origin === 'neu') {

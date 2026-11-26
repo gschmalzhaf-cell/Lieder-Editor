@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   DndContext,
   KeyboardSensor,
@@ -19,14 +19,15 @@ import type { SongHistory } from '../state/history';
 import { clearStand } from '../state/storage';
 import {
   WEITERE_TEILE,
+  cleanSectionName,
+  encodeSong,
   getHeaderValue,
   nameForNewPart,
   nextPartId,
-  serializeSong,
   sngFilename,
-  validateSong,
+  validateSongDetailed,
 } from '../sng';
-import type { HeaderFields, Part, PartType, Song } from '../sng';
+import type { HeaderFields, Part, PartType, Song, ValidationIssue } from '../sng';
 import HeaderForm from './HeaderForm';
 import PartCard from './PartCard';
 import Preview from './Preview';
@@ -39,10 +40,15 @@ interface Props {
 export default function Editor({ history, onExit }: Props) {
   const { song, commit, undo, redo, canUndo, canRedo } = history;
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [saveMessages, setSaveMessages] = useState<string[]>([]);
+  const [focusRequest, setFocusRequest] = useState<{ id: string; target: 'text' | 'name' } | null>(
+    null,
+  );
+  const [saveIssues, setSaveIssues] = useState<ValidationIssue[]>([]);
   const [savedName, setSavedName] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const pruefRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const addBarRef = useRef<HTMLDivElement>(null);
   const noticeTimer = useRef<number | null>(null);
 
   // Ziehen mit der Maus, langes Drücken am Tablet und Verschieben per Tastatur
@@ -81,10 +87,10 @@ export default function Editor({ history, onExit }: Props) {
     [],
   );
 
-  const update = (next: Song) => {
-    setSaveMessages([]);
+  const update = (next: Song, mergeKey?: string) => {
+    setSaveIssues([]);
     setSavedName(null);
-    commit(next);
+    commit(next, mergeKey);
   };
 
   const showNotice = (text: string) => {
@@ -93,9 +99,13 @@ export default function Editor({ history, onExit }: Props) {
     noticeTimer.current = window.setTimeout(() => setNotice(null), 4000);
   };
 
+  const clearFocusRequest = useCallback(() => {
+    setFocusRequest(null);
+  }, []);
+
   const langCount = Number(getHeaderValue(song, 'langcount') ?? '1');
 
-  const addPart = (type: PartType, customName?: string) => {
+  const addPart = (type: PartType, customName?: string, askNameImmediately = false) => {
     const part: Part = {
       id: nextPartId(),
       type,
@@ -105,12 +115,26 @@ export default function Editor({ history, onExit }: Props) {
     };
     update({ ...song, parts: [...song.parts, part] });
     setSelectedId(part.id);
+    setFocusRequest({ id: part.id, target: askNameImmediately ? 'name' : 'text' });
   };
 
-  const updatePart = (id: string, patch: Partial<Part>) => {
-    update({
-      ...song,
-      parts: song.parts.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+  const updatePart = (id: string, patch: Partial<Part>, mergeKey?: string) => {
+    update(
+      {
+        ...song,
+        parts: song.parts.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      },
+      mergeKey,
+    );
+  };
+
+  const renamePart = (part: Part, nextName: string) => {
+    const trimmed = nextName.trim();
+    const currentClean = cleanSectionName(part.name).trim();
+    if (trimmed === currentClean) return;
+    updatePart(part.id, {
+      name: trimmed === '' ? null : trimmed,
+      origin: part.origin === 'datei' ? 'neu' : part.origin,
     });
   };
 
@@ -156,30 +180,49 @@ export default function Editor({ history, onExit }: Props) {
     const text = part.lines.join('\n');
     try {
       await navigator.clipboard.writeText(text);
-      showNotice('Der Text wurde in die Zwischenablage übernommen. Du kannst ihn in einem anderen Teil einfügen.');
+      showNotice(
+        'Der Text wurde in die Zwischenablage übernommen. Du kannst ihn in einem anderen Teil einfügen.',
+      );
     } catch {
-      showNotice('Kopieren ist hier nicht erlaubt. Bitte markiere den Text im Feld und kopiere ihn selbst.');
+      showNotice(
+        'Kopieren ist hier nicht erlaubt. Bitte markiere den Text im Feld und kopiere ihn selbst.',
+      );
     }
   };
 
   const updateHeader = (field: keyof HeaderFields, value: string) => {
-    update({
-      ...song,
-      header: { ...song.header, [field]: value },
-      headerDirty: true,
-    });
+    update(
+      {
+        ...song,
+        header: { ...song.header, [field]: value },
+        headerDirty: true,
+      },
+      `header:${field}`,
+    );
+  };
+
+  const jumpToIssue = (issue: ValidationIssue) => {
+    if (issue.target === 'title') {
+      titleInputRef.current?.focus();
+      titleInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (issue.target === 'part' && issue.partId) {
+      setSelectedId(issue.partId);
+      setFocusRequest({ id: issue.partId, target: 'text' });
+    } else if (issue.target === 'parts') {
+      addBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const save = () => {
-    const messages = validateSong(song);
-    if (messages.length > 0) {
-      setSaveMessages(messages);
+    const issues = validateSongDetailed(song);
+    if (issues.length > 0) {
+      setSaveIssues(issues);
       setSavedName(null);
       pruefRef.current?.focus();
       return;
     }
-    const text = (song.utf8Bom ? '﻿' : '') + serializeSong(song); // BOM als UTF-8-Vorspann
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const bytes = new Uint8Array(encodeSong(song));
+    const blob = new Blob([bytes], { type: 'text/plain;charset=utf-8' });
     const name = sngFilename(song.header.title);
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -190,7 +233,7 @@ export default function Editor({ history, onExit }: Props) {
     a.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
     clearStand();
-    setSaveMessages([]);
+    setSaveIssues([]);
     setSavedName(name);
   };
 
@@ -203,7 +246,12 @@ export default function Editor({ history, onExit }: Props) {
   return (
     <div className="editor">
       <header className="kopf-leiste">
-        <span className="app-name">🎵 Lieder-Editor</span>
+        <div className="kopf-links">
+          <h1 className="app-name">🎵 Lieder-Editor</h1>
+          <span className="gesichert-hinweis" aria-live="polite">
+            ✓ Im Browser gesichert
+          </span>
+        </div>
         <div className="kopf-aktionen">
           <button type="button" onClick={undo} disabled={!canUndo} title="Rückgängig (Strg + Z)">
             ↩ Rückgängig
@@ -231,12 +279,20 @@ export default function Editor({ history, onExit }: Props) {
           {notice}
         </div>
       )}
-      {saveMessages.length > 0 && (
+      {saveIssues.length > 0 && (
         <div className="pruefung" role="alert" tabIndex={-1} ref={pruefRef}>
           <h2>Bevor du speichern kannst, ist noch etwas offen:</h2>
           <ul>
-            {saveMessages.map((m) => (
-              <li key={m}>{m}</li>
+            {saveIssues.map((issue) => (
+              <li key={issue.message}>
+                <button
+                  type="button"
+                  className="pruefung-link"
+                  onClick={() => jumpToIssue(issue)}
+                >
+                  {issue.message}
+                </button>
+              </li>
             ))}
           </ul>
         </div>
@@ -247,51 +303,14 @@ export default function Editor({ history, onExit }: Props) {
         </div>
       )}
 
-      <HeaderForm header={song.header} onChange={updateHeader} />
+      <HeaderForm header={song.header} onChange={updateHeader} titleInputRef={titleInputRef} />
 
       <main className="arbeitsflaeche">
         <section className="teile" aria-label="Liedteile">
-          <div className="hinzufuegen">
-            <button type="button" className="gross primaer" onClick={() => addPart('strophe')}>
-              Strophe hinzufügen
-            </button>
-            <button type="button" className="gross primaer" onClick={() => addPart('refrain')}>
-              Refrain hinzufügen
-            </button>
-            <label className="gross weiteres">
-              Weiteres Teil
-              <select
-                value=""
-                aria-label="Weiteres Teil auswählen"
-                onChange={(e) => {
-                  const label = e.target.value;
-                  if (!label) return;
-                  const entry = WEITERE_TEILE.find((t) => t.label === label);
-                  if (entry) {
-                    addPart(
-                      entry.type,
-                      entry.label === 'Eigenes Teil' ? 'Eigenes Teil' : entry.label,
-                    );
-                  }
-                  e.target.value = '';
-                }}
-              >
-                <option value="" disabled>
-                  Menü öffnen …
-                </option>
-                {WEITERE_TEILE.map((t) => (
-                  <option key={t.label} value={t.label}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
           {song.parts.length === 0 && (
             <p className="leer-hinweis">
-              Noch keine Teile. Füge oben eine Strophe hinzu – der Titel steht schon oben in den
-              Kopfdaten.
+              Noch keine Teile. Füge unten eine Strophe oder einen Refrain hinzu – der Titel steht
+              oben in den Kopfdaten.
             </p>
           )}
 
@@ -311,9 +330,13 @@ export default function Editor({ history, onExit }: Props) {
                   index={i}
                   count={song.parts.length}
                   selected={part.id === selectedId}
+                  focusTarget={focusRequest?.id === part.id ? focusRequest.target : null}
+                  onFocusHandled={clearFocusRequest}
                   onSelect={() => setSelectedId(part.id)}
-                  onLines={(text) => updatePart(part.id, { lines: text.split('\n') })}
-                  onRename={(name) => updatePart(part.id, { name: name === '' ? null : name })}
+                  onLines={(text) =>
+                    updatePart(part.id, { lines: text.split('\n') }, `part:${part.id}`)
+                  }
+                  onRename={(name) => renamePart(part, name)}
                   onMove={(delta) => movePart(part.id, delta)}
                   onRepeat={() => repeatPart(part.id)}
                   onCopy={() => void copyText(part)}
@@ -322,9 +345,49 @@ export default function Editor({ history, onExit }: Props) {
               ))}
             </SortableContext>
           </DndContext>
+
+          <div className="hinzufuegen" ref={addBarRef}>
+            <button type="button" className="gross primaer" onClick={() => addPart('strophe')}>
+              + Strophe hinzufügen
+            </button>
+            <button type="button" className="gross primaer" onClick={() => addPart('refrain')}>
+              + Refrain hinzufügen
+            </button>
+            <label className="gross weiteres">
+              <span>Weiteres Teil ▾</span>
+              <select
+                value=""
+                aria-label="Weiteres Teil auswählen"
+                onChange={(e) => {
+                  const label = e.target.value;
+                  if (!label) return;
+                  const entry = WEITERE_TEILE.find((t) => t.label === label);
+                  if (entry) {
+                    const isCustom = entry.label === 'Eigenes Teil';
+                    addPart(entry.type, entry.label, isCustom);
+                  }
+                  e.target.value = '';
+                }}
+              >
+                <option value="" disabled>
+                  Menü öffnen …
+                </option>
+                {WEITERE_TEILE.map((t) => (
+                  <option key={t.label} value={t.label}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
         </section>
 
-        <Preview parts={song.parts} index={selectedIndex} onNavigate={navigate} />
+        <Preview
+          parts={song.parts}
+          index={selectedIndex}
+          langCount={langCount}
+          onNavigate={navigate}
+        />
       </main>
     </div>
   );

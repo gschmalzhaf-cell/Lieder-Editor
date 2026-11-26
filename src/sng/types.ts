@@ -34,6 +34,8 @@ export interface Song {
   header: HeaderFields;
   /** Kopfzeilen genau so, wie sie gelesen wurden (inkl. unbekannter Angaben). */
   headerRaw: string[];
+  /** Ursprünglicher Schlüssel für Liednummer (z. B. CCLI oder Songbook), falls aus Datei gelesen. */
+  songNumberKey?: string;
   /** true, sobald jemand ein Kopf-Feld im Editor ändert (dann wird der Kopf neu aufgebaut). */
   headerDirty: boolean;
   parts: Part[];

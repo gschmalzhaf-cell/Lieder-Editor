@@ -3,17 +3,23 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  buildPreviewLines,
+  cleanSectionName,
   createEmptySong,
   decodeBytes,
   encodeSong,
+  formatSectionNameForFile,
   getHeaderValue,
+  isNativeSongBeamerMarker,
   nameForNewPart,
   nextPartId,
   parseSectionName,
   parseSongBytes,
+  partDisplayName,
   serializeSong,
   sngFilename,
   validateSong,
+  validateSongDetailed,
 } from '../src/sng';
 import type { Part, Song } from '../src/sng';
 
@@ -38,6 +44,7 @@ const UTF8_FIXTURES = [
   'beispiel-mehrsprachig.sng',
   'beispiel-html-tags.sng',
   'beispiel-leerzeilen.sng',
+  'beispiel-custom-marker.sng',
 ];
 
 describe('Rundlauf unverändert (Lesen und wieder Schreiben)', () => {
@@ -110,22 +117,59 @@ describe('Rundlauf mit Änderung', () => {
   });
 });
 
-describe('Teilnamen erkennen (deutsch und englisch)', () => {
+describe('Teilnamen erkennen (deutsch und englisch) & eigene Marker ($$M=)', () => {
   it('reservierte Namen werden derselben Art zugeordnet', () => {
     expect(parseSectionName('Vers 1')?.type).toBe('strophe');
+    expect(parseSectionName('Vers 1a')?.type).toBe('strophe');
     expect(parseSectionName('Verse 2')?.type).toBe('strophe');
     expect(parseSectionName('Strophe 3')?.type).toBe('strophe');
     expect(parseSectionName('Refrain')?.type).toBe('refrain');
     expect(parseSectionName('Chorus 2')?.type).toBe('refrain');
     expect(parseSectionName('Bridge')?.type).toBe('bridge');
+    expect(parseSectionName('Pre-Bridge')?.type).toBe('weiterer');
+    expect(parseSectionName('Pre-Coda')?.type).toBe('weiterer');
     expect(parseSectionName('Intro')?.type).toBe('intro');
     expect(parseSectionName('Outro')?.type).toBe('schluss');
     expect(parseSectionName('Schluss')?.type).toBe('schluss');
     expect(parseSectionName('Zwischenspiel')?.type).toBe('zwischenspiel');
     expect(parseSectionName('Interlude')?.type).toBe('zwischenspiel');
+    expect(parseSectionName('Instrumental')?.type).toBe('zwischenspiel');
+    expect(parseSectionName('Unbenannt')?.type).toBe('weiterer');
     expect(parseSectionName('Teil A')?.type).toBe('weiterer');
     expect(parseSectionName('$$M=Solo Gitarre')?.type).toBe('weiterer');
     expect(parseSectionName('Eine ganz normale Textzeile')).toBeNull();
+  });
+
+  it('eigene Namen bekommen beim Schreiben automatisch $$M= und erscheinen in der UI ohne $$M=', () => {
+    expect(isNativeSongBeamerMarker('Vers 1')).toBe(true);
+    expect(isNativeSongBeamerMarker('Pre-Bridge')).toBe(true);
+    expect(isNativeSongBeamerMarker('Instrumental')).toBe(true);
+    expect(isNativeSongBeamerMarker('Gesprochener Text')).toBe(false);
+    expect(isNativeSongBeamerMarker('Kinderchor')).toBe(false);
+
+    expect(formatSectionNameForFile('Vers 1')).toBe('Vers 1');
+    expect(formatSectionNameForFile('Kinderchor')).toBe('$$M=Kinderchor');
+    expect(formatSectionNameForFile('$$M=Solo Gitarre')).toBe('$$M=Solo Gitarre');
+    expect(cleanSectionName('$$M=Solo Gitarre')).toBe('Solo Gitarre');
+
+    const song = createEmptySong();
+    song.header.title = 'Test';
+    song.parts.push({
+      id: 'p1',
+      type: 'weiterer',
+      name: 'Kinderchor',
+      lines: ['Singt dem Herrn ein neues Lied'],
+      origin: 'neu',
+    });
+    const text = serializeSong(song);
+    expect(text).toContain('---\r\n$$M=Kinderchor\r\nSingt dem Herrn');
+
+    // Rundlauf: beim erneuten Lesen bleibt Kinderchor der Teilname (nicht Liedtext!)
+    const { song: again } = parseSongBytes(encodeSong(song));
+    expect(again.parts).toHaveLength(1);
+    expect(again.parts[0].name).toBe('$$M=Kinderchor');
+    expect(again.parts[0].lines[0]).toBe('Singt dem Herrn ein neues Lied');
+    expect(partDisplayName(again.parts[0], 0)).toBe('Kinderchor');
   });
 
   it('Namen bleiben beim Schreiben erhalten (z. B. „Strophe 1“, „Chorus“)', () => {
@@ -185,6 +229,21 @@ describe('Kopfzeilen', () => {
     expect(lines[2]).toBe('#CCLI=858299');
     expect(lines[editorIdx + 1]).toBe('#Key=F#m');
     expect(lines[keyIdx + 1]).toBe('#VerseOrder=Verse 1,Chorus,Verse 2,Chorus,Bridge');
+  });
+
+  it('#Songbook wird als Liednummer gelesen und bei Buchstaben als #Songbook geschrieben', () => {
+    const { song } = parseSongBytes(fixtureBytes('beispiel-custom-marker.sng'));
+    expect(song.header.songNumber).toBe('EG 331');
+    const edited: Song = { ...song, headerDirty: true };
+    expect(serializeSong(edited)).toContain('#Songbook=EG 331');
+
+    const neu = createEmptySong();
+    neu.header.title = 'Loblied';
+    neu.header.songNumber = 'EG 331';
+    expect(serializeSong(neu)).toContain('#Songbook=EG 331');
+
+    neu.header.songNumber = '2564128';
+    expect(serializeSong(neu)).toContain('#CCLI=2564128');
   });
 
   it('LangCount wird erkannt (Mehrsprachigkeit)', () => {
@@ -268,14 +327,58 @@ describe('Prüfung vor dem Speichern (Klartext-Meldungen)', () => {
     ]);
   });
 
-  it('leere Karte und Karte mit nur Leerzeilen', () => {
+  it('leere Karte (auch mit [""]) und Karte mit nur Leerzeilen', () => {
     const song = createEmptySong();
     song.header.title = 'Titel';
-    song.parts.push({ id: '1', type: 'strophe', name: 'Vers 2', lines: [], origin: 'neu' });
+    song.parts.push({ id: '1', type: 'strophe', name: 'Vers 2', lines: [''], origin: 'neu' });
     song.parts.push({ id: '2', type: 'refrain', name: 'Refrain', lines: ['', '   '], origin: 'neu' });
-    expect(validateSong(song)).toEqual([
+    const detailed = validateSongDetailed(song);
+    expect(detailed.map((d) => d.message)).toEqual([
       'Die Strophe 2 ist noch leer. Fülle sie oder lösch sie.',
       'Im Refrain stehen nur leere Zeilen.',
     ]);
+    expect(detailed[0]).toMatchObject({ target: 'part', partId: '1' });
+    expect(detailed[1]).toMatchObject({ target: 'part', partId: '2' });
+  });
+});
+
+describe('Folien-Vorschau (SongBeamer-Steuerzeichen)', () => {
+  it('versteckt #H-Kommentare, trennt --, verarbeitet <b>/<i>/<u>/<br> und erkennt Sprachen', () => {
+    const lines = buildPreviewLines(
+      [
+        '#H Regieanweisung nur für den Bediener',
+        '<b>Lobe</b> den <i>Herrn</i><br>mit <u>Freude</u>',
+        '--',
+        '#0 Untertitel',
+        '<color:$00FFFF>Farbiger Text</color>',
+      ],
+      1,
+    );
+    expect(lines).toHaveLength(5);
+    expect(lines[0]).toMatchObject({
+      kind: 'text',
+      spans: [
+        { text: 'Lobe', bold: true, italic: false, underline: false },
+        { text: ' den ', bold: false, italic: false, underline: false },
+        { text: 'Herrn', bold: false, italic: true, underline: false },
+      ],
+    });
+    expect(lines[1]).toMatchObject({
+      kind: 'text',
+      spans: [
+        { text: 'mit ', bold: false, italic: false, underline: false },
+        { text: 'Freude', bold: false, italic: false, underline: true },
+      ],
+    });
+    expect(lines[2]).toEqual({ kind: 'break' });
+    expect(lines[3]).toMatchObject({ kind: 'text', subtitle: true });
+    expect(lines[4]).toMatchObject({
+      kind: 'text',
+      spans: [{ text: 'Farbiger Text', bold: false, italic: false, underline: false }],
+    });
+
+    const multi = buildPreviewLines(['Zeile Deutsch', 'Line English'], 2);
+    expect(multi[0]).toMatchObject({ kind: 'text', lang: 1 });
+    expect(multi[1]).toMatchObject({ kind: 'text', lang: 2 });
   });
 });

@@ -14,19 +14,31 @@ export function saveStand(song: Song): void {
   }
 }
 
-export function loadStand(): Song | null {
+export interface StoredStand {
+  song: Song;
+  savedAt: string | null;
+}
+
+export function loadStandWithMeta(): StoredStand | null {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
-    const data = JSON.parse(raw) as { song?: Song };
+    const data = JSON.parse(raw) as { song?: Song; savedAt?: string };
     const song = data?.song;
     if (!song || typeof song !== 'object' || !song.header || !Array.isArray(song.parts)) {
       return null;
     }
-    return song;
+    return {
+      song,
+      savedAt: typeof data.savedAt === 'string' ? data.savedAt : null,
+    };
   } catch {
     return null;
   }
+}
+
+export function loadStand(): Song | null {
+  return loadStandWithMeta()?.song ?? null;
 }
 
 export function clearStand(): void {

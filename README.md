@@ -31,12 +31,12 @@ Autor, Melodie, Liednummer, Copyright und Notizen eintragen. Leer lassen ist erl
 
 ![Karten mit Strophe und Refrain](docs/schritt-3-teile.svg)
 
-Jeder Liedteil ist eine **Karte** mit Sinnbild, Farbe und Namen. Darüber liegen drei große
+Jeder Liedteil ist eine **Karte** mit Sinnbild, Farbe und Namen. Unter der Liste liegen drei große
 Knöpfe:
 
-- **„Strophe hinzufügen“** – wird automatisch nummeriert (Vers 1, Vers 2, …)
-- **„Refrain hinzufügen“** – (Refrain, Refrain 2, …)
-- **„Weiteres Teil“** – öffnet ein Menü mit Bridge, Intro, Schluss, Zwischenspiel,
+- **„+ Strophe hinzufügen“** – wird automatisch nummeriert (Vers 1, Vers 2, …)
+- **„+ Refrain hinzufügen“** – (Refrain, Refrain 2, …)
+- **„Weiteres Teil ▾“** – öffnet ein Menü mit Bridge, Intro, Schluss, Zwischenspiel,
   gesprochenem Text, Antwort, Solo und weiteren seltenen Teilen
 
 In jede Karte schreibst du den Text direkt hinein. **Mehrere Zeilen** sind möglich; eine
@@ -58,7 +58,8 @@ An jeder Karte kannst du:
 
 Rechts (auf dem Tablet darunter) siehst du die **Folie im Hochformat**, so wie die Gemeinde sie
 später sieht: große Schrift, alles mittig. Wenn du durch die Karten klickst oder die
-„Zurück“/„Weiter“-Knöpfe benutzt, wandert die Vorschau mit.
+„Zurück“/„Weiter“-Knöpfe benutzt, wandert die Vorschau mit. Lange Folien werden automatisch
+passend verkleinert; ab 9 Zeilen erscheint ein kurzer Lesbarkeitstipp.
 
 ### Schritt 5: Speichern
 
@@ -72,12 +73,15 @@ noch fehlt, zum Beispiel:
 - „Im Refrain stehen nur leere Zeilen.“
 - „Das Lied hat noch keine Teile. Füge eine Strophe hinzu.“
 
+Mit einem Klick auf eine Meldung springst du direkt an die passende Stelle.
+
 Ist alles gut, lädt der Browser die fertige `.sng`-Datei herunter. Der Dateiname entsteht aus
 dem Titel, zum Beispiel `Näher_mein_Gott_zu_Dir.sng`.
 
-**Nebenbei:** Das Programm merkt sich jeden Tastendruck automatisch in deinem Browser. Öffnest
-du die Seite später wieder, fragt es: *„Ungespeicherte Änderungen wiederherstellen?“* mit den
-Knöpfen **„Weiter bearbeiten“** und **„Neu beginnen“**.
+**Nebenbei:** Das Programm merkt sich jeden Tastendruck automatisch in deinem Browser (oben
+erkennbar an *„✓ Im Browser gesichert“*). Öffnest du die Seite später wieder, fragt es:
+*„Ungespeicherte Änderungen wiederherstellen?“* mit dem Titel deines Entwurfs und den Knöpfen
+**„Weiter bearbeiten“** und **„Neu beginnen“**.
 
 **Rückgängig:** Jeder Schritt lässt sich rückgängig machen – mit **Strg + Z** (am Mac
 **Cmd + Z**) oder dem Knopf **„Rückgängig“** oben. Nichts geht durch einen Fehlklick verloren.
@@ -157,8 +161,8 @@ npm run build   # Produktionsbau nach dist/
 
 Die Tests prüfen unter anderem: Rundlauf unverändert (jede Prüfdatei wird gelesen und
 byte-identisch wieder ausgegeben), Rundlauf nach einer Änderung, Windows-1252 mit ä/ö/ü/ß,
-UTF-16, unbekannte Kopfzeilen, mehrsprachige Dateien und die Klartext-Meldungen vor dem
-Speichern.
+UTF-16, eigene Abschnittsmarker (`$$M=`), unbekannte Kopfzeilen, mehrsprachige Dateien,
+Folien-Vorschau und die Klartext-Meldungen vor dem Speichern.
 
 ---
 
@@ -166,21 +170,26 @@ Speichern.
 
 Wo die Formatbeschreibung Spielraum ließ, wurde der einfachste Fall gewählt:
 
-- **Teilname erkennen:** Steht direkt nach `---` ein reservierter Name (Vers/Verse/Strophe,
-  Refrain/Chorus, Bridge, Intro, Outro/Schluss/Ending, Zwischenspiel/Interlude, Pre-Chorus,
-  Pre-Refrain, Teil/Part, Solo, Antwort/Response, Gesprochener Text/Speech, Tag, Coda,
-  Unbekannt/Unknown/Misc – jeweils mit optionaler Nummer oder Buchstabe, z. B. „Vers 1“, „Teil A“,
-  oder mit `$$M=…` für eigene Namen), wird diese Zeile als Teilname gelesen. Sonst beginnt dort
-  direkt der Text (Teil ohne Namen).
+- **Teilname erkennen:** Steht direkt nach `---` ein reservierter SongBeamer-Name
+  (Vers/Verse/Strophe, Refrain/Chorus, Bridge, Pre-Bridge, Intro, Outro/Schluss/Ending,
+  Zwischenspiel/Interlude/Instrumental, Pre-Chorus, Pre-Refrain, Pre-Coda, Teil/Part, Tag, Coda,
+  Unbekannt/Unknown/Unbenannt/Misc – jeweils mit optionaler Nummer oder Buchstabe, z. B.
+  „Vers 1“, „Vers 1a“, „Teil A“ – oder mit `$$M=…` für eigene Namen), wird diese Zeile als
+  Teilname gelesen. Sonst beginnt dort direkt der Text (Teil ohne Namen).
+- **Eigene Teilnamen sicher speichern:** Frei gewählte Namen (z. B. „Gesprochener Text“, „Solo“
+  oder ein umbenanntes Teil wie „Kinderchor“) erhalten beim Schreiben automatisch das
+  SongBeamer-Präfix `$$M=`, damit SongBeamer sie sicher als Foliennamen erkennt und nicht als
+  Liedtext projiziert. In der Oberfläche ist `$$M=` niemals sichtbar.
 - **Namen bleiben erhalten:** Beim Lesen übernommene Namen (z. B. „Strophe 1“, „Chorus“) werden
   1:1 wieder ausgegeben. Neu angelegte Strophen heißen automatisch „Vers 1“, „Vers 2“, …; beim
   „Teil wiederholen“ wird der Name mitgeführt (zweiter Abschnitt mit gleichem Namen).
 - **Kopfdaten-Schlüssel:** Titel → `#Title`, Autor → `#Author`, Melodie → `#Melody`,
-  Liednummer → `#CCLI`, Copyright → `#(c)` (beim Lesen werden auch `#Copyright` und
-  `#SongNumber` erkannt), Notizen → `#Comment`. Beim Schreiben neuer/Geänderter Dateien
-  beginnt der Kopf mit `#Title`, dann die weiteren bekannten Angaben, dann alle unbekannten
-  Angaben in ursprünglicher Reihenfolge; `#LangCount=1` und `#Version=3` werden ergänzt,
-  falls nicht vorhanden.
+  Liednummer → `#CCLI` (bei reinen Zahlen) bzw. `#Songbook` (bei Angaben mit Buchstaben wie
+  „EG 331“; beim Lesen werden `#CCLI`, `#SongNumber`, `#Songbook` und `#ChurchSongID` erkannt),
+  Copyright → `#(c)` (beim Lesen wird auch `#Copyright` erkannt), Notizen → `#Comment`. Beim
+  Schreiben neuer/geänderter Dateien beginnt der Kopf mit `#Title`, dann die weiteren bekannten
+  Angaben, dann alle unbekannten Angaben in ursprünglicher Reihenfolge; `#LangCount=1` und
+  `#Version=3` werden ergänzt, falls nicht vorhanden.
 - **Zeichensatz:** Lesen erkennt UTF-8 (mit/ohne BOM), UTF-16 (LE/BE, mit BOM) und fällt
   sonst auf Windows-1252 zurück. Schreiben ist immer UTF-8 – neu erzeugte Dateien und Dateien,
   die nicht als UTF-8 gelesen wurden, bekommen ein BOM, damit SongBeamer sie sicher als UTF-8
@@ -188,13 +197,14 @@ Wo die Formatbeschreibung Spielraum ließ, wurde der einfachste Fall gewählt:
 - **Zeilenenden:** Windows (CRLF) und Unix (LF) werden erkannt und mitgeführt; neu erzeugte
   Dateien bekommen CRLF (Windows-Standard von SongBeamer). Am Dateiende steht bei neuen
   Dateien eine Leerzeile.
-- **Weiche Folienumbrüche** (`--`, `--A`) und **Zeilen-Präfixe** (`#H `, `#1 ` …) im Text
-  werden als reiner Text behandelt und unverändert wieder ausgegeben. Dasselbe gilt für
-  HTML-artige Auszeichnungen (`<b>…</b>`, `<br>`, `<c:$…>` …).
+- **Weiche Folienumbrüche & Auszeichnungen:** `--`, `--A`, Zeilen-Präfixe (`#H `, `#0 `, `#1 ` …)
+  und HTML-artige Auszeichnungen (`<b>…</b>`, `<i>…</i>`, `<u>…</u>`, `<br>`, `<color:…>`)
+  bleiben im Textfeld unverändert erhalten und werden 1:1 ausgegeben. In der **Vorschau**
+  werden sie so dargestellt, wie SongBeamer sie projiziert (`#H `-Kommentare ausgeblendet,
+  Fett/Kursiv/Unterstrichen gerendert, `--` als Trennlinie).
 - **Mehrsprachige Dateien** (`#LangCount` > 1) werden vollständig übernommen und unverändert
-  wieder ausgegeben; der Editor weist mit einem Hinweis darauf hin. (Die Zeilen der Sprachen
-  wechseln sich zeilenweise ab – beim Bearbeiten einzelner Zeilen kann diese Zuordnung
-  durcheinandergeraten, deshalb der Hinweis.)
+  wieder ausgegeben; der Editor weist mit einem Hinweis darauf hin und färbt in der Vorschau
+  die zweite Sprache dezent ab.
 - **„Übernehmen“** bedeutet: Der Text einer Karte wird in die Zwischenablage kopiert, um ihn in
   eine andere Karte einzufügen.
 

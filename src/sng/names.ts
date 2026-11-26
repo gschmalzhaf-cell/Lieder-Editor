@@ -6,11 +6,10 @@ export interface SectionNameInfo {
 }
 
 /**
- * Erkennt reservierte Abschnittsnamen von SongBeamer (deutsch und englisch),
- * jeweils mit optionaler Nummer oder Buchstabe („Vers 1“, „Teil A“).
- * `$$M=...` erzwingt einen eigenen Namen. Alles andere ist kein Name.
+ * Offizielle, von SongBeamer direkt erkannte Abschnittsnamen (deutsch und englisch).
+ * Nur diese Namen erkennt SongBeamer ohne `$$M=`-Präfix als Folienbezeichner.
  */
-const FIXED_NAMES: Record<string, PartType> = {
+const NATIVE_FIXED_NAMES: Record<string, PartType> = {
   bridge: 'bridge',
   brücke: 'bridge',
   intro: 'intro',
@@ -19,17 +18,31 @@ const FIXED_NAMES: Record<string, PartType> = {
   ending: 'schluss',
   zwischenspiel: 'zwischenspiel',
   interlude: 'zwischenspiel',
+  instrumental: 'zwischenspiel',
   'pre-chorus': 'weiterer',
   'pre chorus': 'weiterer',
   'pre-refrain': 'weiterer',
   'pre refrain': 'weiterer',
+  'pre-bridge': 'weiterer',
+  'pre bridge': 'weiterer',
+  'pre-coda': 'weiterer',
+  'pre coda': 'weiterer',
   teil: 'weiterer',
   part: 'weiterer',
   unbekannt: 'weiterer',
   unknown: 'weiterer',
+  unbenannt: 'weiterer',
   misc: 'weiterer',
   coda: 'weiterer',
   tag: 'weiterer',
+};
+
+/**
+ * Zusätzliche sprechende Namen aus älteren Dateien, die der Leser ebenfalls als
+ * Teilnamen erkennt (beim Schreiben neuer/geänderter Teile bekommen sie `$$M=`,
+ * damit SongBeamer sie nicht als Liedtext projiziert).
+ */
+const EXTRA_RECOGNIZED_NAMES: Record<string, PartType> = {
   'gesprochener text': 'weiterer',
   speech: 'weiterer',
   talk: 'weiterer',
@@ -48,41 +61,88 @@ function normalize(line: string): string {
     .replace(/\s+/g, ' ');
 }
 
+function isMarkerSuffix(token: string): boolean {
+  return /^\d+[a-z]?$/.test(token) || /^[a-z]$/.test(token);
+}
+
+/** Prüft, ob ein Name von SongBeamer direkt (ohne `$$M=`) als Folienmarker erkannt wird. */
+export function isNativeSongBeamerMarker(raw: string): boolean {
+  const line = normalize(raw);
+  if (line === '') return false;
+  if (/^(vers|verse|strophe)(\s+(\d+[a-z]?|[a-z])|\d+[a-z]?)?$/.test(line)) return true;
+  if (/^(refrain|chorus)(\s+(\d+[a-z]?|[a-z])|\d+[a-z]?)?$/.test(line)) return true;
+
+  const words = line.split(' ');
+  const last = words[words.length - 1];
+  const base = isMarkerSuffix(last) && words.length > 1 ? words.slice(0, -1).join(' ') : line;
+  return Object.hasOwn(NATIVE_FIXED_NAMES, base);
+}
+
+/** Entfernt ein technisches `$$M=`-Präfix, damit der Nutzer niemals Rohformat sieht. */
+export function cleanSectionName(raw: string | null): string {
+  if (!raw) return '';
+  return raw.replace(/^\$\$M=/i, '');
+}
+
+/**
+ * Bereitet einen Teilnamen für das Schreiben in eine .sng-Datei auf:
+ * Offizielle SongBeamer-Marker bleiben unverändert; eigene Namen bekommen `$$M=`,
+ * damit SongBeamer sie sicher als Foliennamen erkennt und nicht als Liedtext anzeigt.
+ */
+export function formatSectionNameForFile(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed === '') return '';
+  if (/^\$\$M=/i.test(trimmed)) return trimmed;
+  if (isNativeSongBeamerMarker(trimmed)) return trimmed;
+  return `$$M=${trimmed}`;
+}
+
 export function parseSectionName(raw: string): SectionNameInfo | null {
   const line = normalize(raw);
   if (line === '') return null;
-  if (line.startsWith('$$m=')) return { type: 'weiterer', number: null };
-
-  let m = /^(vers|verse|strophe)\s*(\d+|[a-z])?$/.exec(line);
-  if (m) {
-    return { type: 'strophe', number: m[2] && /^\d+$/.test(m[2]) ? Number(m[2]) : null };
+  if (line.startsWith('$$m=')) {
+    const inner = line.slice(4).trim();
+    if (inner === '') return { type: 'weiterer', number: null };
+    const innerInfo = parseSectionName(inner);
+    return innerInfo ?? { type: 'weiterer', number: null };
   }
-  m = /^(refrain|chorus)\s*(\d+|[a-z])?$/.exec(line);
+
+  let m = /^(vers|verse|strophe)\s*(\d+[a-z]?|[a-z])?$/.exec(line);
   if (m) {
-    return { type: 'refrain', number: m[2] && /^\d+$/.test(m[2]) ? Number(m[2]) : null };
+    const numMatch = m[2] ? /^(\d+)/.exec(m[2]) : null;
+    return { type: 'strophe', number: numMatch ? Number(numMatch[1]) : null };
+  }
+  m = /^(refrain|chorus)\s*(\d+[a-z]?|[a-z])?$/.exec(line);
+  if (m) {
+    const numMatch = m[2] ? /^(\d+)/.exec(m[2]) : null;
+    return { type: 'refrain', number: numMatch ? Number(numMatch[1]) : null };
   }
 
   const words = line.split(' ');
   const last = words[words.length - 1];
-  const isSuffix = /^\d+$/.test(last) || /^[a-z]$/.test(last);
-  const base = isSuffix && words.length > 1 ? words.slice(0, -1).join(' ') : line;
-  const type = FIXED_NAMES[base];
+  const base = isMarkerSuffix(last) && words.length > 1 ? words.slice(0, -1).join(' ') : line;
+  const type = NATIVE_FIXED_NAMES[base] ?? EXTRA_RECOGNIZED_NAMES[base];
   if (type) return { type, number: null };
   return null;
 }
 
 /** Anzeigename einer Karte in Klartext, z. B. „Strophe 2“ oder „Refrain“. */
 export function partDisplayName(part: Part, index: number): string {
+  const clean = cleanSectionName(part.name);
   if (part.type === 'strophe') {
-    const m = /(\d+)\s*$/.exec(part.name ?? '');
-    return `Strophe ${m ? m[1] : index + 1}`;
+    const m = /^(\s*)(vers|verse|strophe)\s*(\d+[a-z]?|[a-z])?$/i.exec(clean);
+    if (m) {
+      return m[3] ? `Strophe ${m[3]}` : `Strophe ${index + 1}`;
+    }
+    if (clean) return clean;
+    return `Strophe ${index + 1}`;
   }
   if (part.type === 'refrain') {
-    if (!part.name) return 'Refrain';
-    return part.name.replace(/^chorus/i, 'Refrain');
+    if (!clean) return 'Refrain';
+    return clean.replace(/^chorus/i, 'Refrain');
   }
-  if (part.name) {
-    return part.name.replace(/^\$\$M=/i, '');
+  if (clean) {
+    return clean;
   }
   const fallback: Record<PartType, string> = {
     strophe: `Strophe ${index + 1}`,

@@ -1,12 +1,13 @@
 import { useCallback, useRef, useState } from 'react';
 import type { Song } from '../sng/types';
 
-const MAX = 100;
+const MAX = 200;
+const MERGE_WINDOW_MS = 650;
 
 export interface SongHistory {
   song: Song;
-  /** Nimmt eine neue Version auf (jeder Bearbeitungsschritt). */
-  commit: (next: Song) => void;
+  /** Nimmt eine neue Version auf. Gleicher mergeKey kurz hintereinander fasst Tippen zusammen. */
+  commit: (next: Song, mergeKey?: string) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
@@ -21,12 +22,24 @@ export function useSongHistory(initial: Song): SongHistory {
   songRef.current = song;
   const pastRef = useRef<Song[]>([]);
   const futureRef = useRef<Song[]>([]);
+  const lastMergeRef = useRef<{ key: string; at: number } | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
-  const commit = useCallback((next: Song) => {
-    pastRef.current.push(structuredClone(songRef.current));
-    if (pastRef.current.length > MAX) pastRef.current.shift();
+  const commit = useCallback((next: Song, mergeKey?: string) => {
+    const now = Date.now();
+    const shouldMerge =
+      Boolean(mergeKey) &&
+      lastMergeRef.current !== null &&
+      lastMergeRef.current.key === mergeKey &&
+      now - lastMergeRef.current.at < MERGE_WINDOW_MS &&
+      pastRef.current.length > 0;
+
+    if (!shouldMerge) {
+      pastRef.current.push(structuredClone(songRef.current));
+      if (pastRef.current.length > MAX) pastRef.current.shift();
+    }
+    lastMergeRef.current = mergeKey ? { key: mergeKey, at: now } : null;
     futureRef.current = [];
     setSong(next);
     setCanUndo(true);
@@ -36,6 +49,7 @@ export function useSongHistory(initial: Song): SongHistory {
   const undo = useCallback(() => {
     const past = pastRef.current;
     if (past.length === 0) return;
+    lastMergeRef.current = null;
     futureRef.current.push(structuredClone(songRef.current));
     const prev = past.pop() as Song;
     setSong(prev);
@@ -46,6 +60,7 @@ export function useSongHistory(initial: Song): SongHistory {
   const redo = useCallback(() => {
     const future = futureRef.current;
     if (future.length === 0) return;
+    lastMergeRef.current = null;
     pastRef.current.push(structuredClone(songRef.current));
     const next = future.pop() as Song;
     setSong(next);
@@ -56,6 +71,7 @@ export function useSongHistory(initial: Song): SongHistory {
   const reset = useCallback((next: Song) => {
     pastRef.current = [];
     futureRef.current = [];
+    lastMergeRef.current = null;
     setSong(next);
     setCanUndo(false);
     setCanRedo(false);

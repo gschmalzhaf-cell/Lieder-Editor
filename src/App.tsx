@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createEmptySong, parseSongBytes } from './sng';
 import type { Song } from './sng';
 import { useSongHistory } from './state/history';
-import { clearStand, loadStand, saveStand } from './state/storage';
-import { useEffect } from 'react';
+import { clearStand, loadStandWithMeta, saveStand } from './state/storage';
+import type { StoredStand } from './state/storage';
 import StartScreen from './ui/StartScreen';
 import RestoreScreen from './ui/RestoreScreen';
 import Editor from './ui/Editor';
@@ -11,9 +11,9 @@ import Editor from './ui/Editor';
 type Screen = 'restore' | 'start' | 'editor';
 
 export default function App() {
-  const [stored] = useState<Song | null>(() => loadStand());
+  const [stored] = useState<StoredStand | null>(() => loadStandWithMeta());
   const [screen, setScreen] = useState<Screen>(stored ? 'restore' : 'start');
-  const history = useSongHistory(stored ?? createEmptySong());
+  const history = useSongHistory(stored?.song ?? createEmptySong());
 
   // Automatisches Abspeichern im Browser bei jeder Änderung (jeder Tastendruck)
   useEffect(() => {
@@ -44,6 +44,8 @@ export default function App() {
   if (screen === 'restore' && stored) {
     return (
       <RestoreScreen
+        title={stored.song.header.title}
+        partCount={stored.song.parts.length}
         onContinue={() => setScreen('editor')}
         onNewStart={() => {
           clearStand();

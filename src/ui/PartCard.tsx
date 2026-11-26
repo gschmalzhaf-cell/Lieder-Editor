@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { partDisplayName, partIcon } from '../sng';
+import { cleanSectionName, partDisplayName, partIcon } from '../sng';
 import type { Part } from '../sng';
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   index: number;
   count: number;
   selected: boolean;
+  focusTarget?: 'text' | 'name' | null;
+  onFocusHandled?: () => void;
   onSelect: () => void;
   onLines: (text: string) => void;
   onRename: (name: string) => void;
@@ -19,7 +21,7 @@ interface Props {
 }
 
 export default function PartCard(props: Props) {
-  const { part, index, count, selected } = props;
+  const { part, index, count, selected, focusTarget, onFocusHandled } = props;
   const {
     attributes,
     listeners,
@@ -31,13 +33,29 @@ export default function PartCard(props: Props) {
   } = useSortable({ id: part.id });
   const [renaming, setRenaming] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [draftName, setDraftName] = useState(part.name ?? '');
+  const [draftName, setDraftName] = useState(() => cleanSectionName(part.name));
   const deleteTimer = useRef<number | null>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (renaming) nameInputRef.current?.focus();
+    if (renaming) {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }
   }, [renaming]);
+
+  useEffect(() => {
+    if (!focusTarget) return;
+    if (focusTarget === 'name') {
+      setDraftName(cleanSectionName(part.name));
+      setRenaming(true);
+    } else if (focusTarget === 'text') {
+      textAreaRef.current?.focus();
+      textAreaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    onFocusHandled?.();
+  }, [focusTarget, onFocusHandled, part.name]);
 
   useEffect(
     () => () => {
@@ -97,7 +115,7 @@ export default function PartCard(props: Props) {
             onKeyDown={(e) => {
               if (e.key === 'Enter') commitName();
               if (e.key === 'Escape') {
-                setDraftName(part.name ?? '');
+                setDraftName(cleanSectionName(part.name));
                 setRenaming(false);
               }
             }}
@@ -109,7 +127,7 @@ export default function PartCard(props: Props) {
             className="karten-name"
             onClick={(e) => {
               e.stopPropagation();
-              setDraftName(part.name ?? '');
+              setDraftName(cleanSectionName(part.name));
               setRenaming(true);
               props.onSelect();
             }}
@@ -121,6 +139,7 @@ export default function PartCard(props: Props) {
         {part.origin === 'wiederholung' && <span className="abzeichen">Wiederholung</span>}
       </header>
       <textarea
+        ref={textAreaRef}
         className="karten-text"
         value={part.lines.join('\n')}
         rows={Math.max(3, part.lines.length)}
