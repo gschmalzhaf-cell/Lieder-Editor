@@ -1,0 +1,18 @@
+#Title=Strophennamen-Beispiel
+#Author=Unbekannt
+#LangCount=1
+#Version=3
+---
+Strophe 1
+Zeile eins der ersten Strophe
+Zeile zwei der ersten Strophe
+
+---
+Refrain
+Refrainzeile eins
+Refrainzeile zwei
+
+---
+Strophe 2
+Eine Zeile der zweiten Strophe
+

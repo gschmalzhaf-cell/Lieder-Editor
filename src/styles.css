@@ -1,0 +1,537 @@
+:root {
+  --farbe-haupt: #3b4a8c;
+  --farbe-haupt-dunkel: #2c3866;
+  --farbe-erfolg: #1e7d46;
+  --farbe-fehler: #b3261e;
+  --farbe-text: #1c1c1e;
+  --farbe-hintergrund: #f4f5f9;
+  --farbe-karte: #ffffff;
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--farbe-text);
+  background: var(--farbe-hintergrund);
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 1.9rem;
+  margin: 0 0 0.75rem;
+}
+
+h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+:focus-visible {
+  outline: 3px solid var(--farbe-haupt);
+  outline-offset: 2px;
+}
+
+/* ---------- Startseite & Wiederherstellen ---------- */
+
+.start {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.start.drag-over {
+  outline: 4px dashed var(--farbe-haupt);
+  outline-offset: -12px;
+  border-radius: var(--radius);
+}
+
+.erklaerung {
+  font-size: 1.1rem;
+  margin: 0 auto 2rem;
+  max-width: 34rem;
+}
+
+.start-knoepfe {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tipp {
+  margin-top: 1.5rem;
+  color: #555;
+}
+
+.gross {
+  display: inline-block;
+  min-height: 56px;
+  min-width: 200px;
+  padding: 0.8rem 1.6rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 2px solid var(--farbe-haupt);
+  background: var(--farbe-karte);
+  color: var(--farbe-haupt);
+  text-align: center;
+}
+
+.gross.primaer,
+.primaer {
+  background: var(--farbe-haupt);
+  color: #fff;
+  border-color: var(--farbe-haupt);
+}
+
+.datei-knopf {
+  cursor: pointer;
+}
+
+.versteckt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+/* ---------- Editor: Kopfleiste ---------- */
+
+.editor {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem 3rem;
+}
+
+.kopf-leiste {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.app-name {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--farbe-haupt);
+}
+
+.kopf-aktionen {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.kopf-aktionen button {
+  min-height: 44px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 10px;
+  border: 2px solid var(--farbe-haupt);
+  background: var(--farbe-karte);
+  color: var(--farbe-haupt);
+  font-weight: 600;
+}
+
+.kopf-aktionen .primaer {
+  background: var(--farbe-haupt);
+  color: #fff;
+}
+
+/* ---------- Meldungen ---------- */
+
+.hinweis,
+.erfolg,
+.pruefung {
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin: 0.75rem 0;
+  max-width: 100%;
+}
+
+.hinweis {
+  background: #fff8e1;
+  border: 2px solid #e0a800;
+}
+
+.erfolg {
+  background: #e6f4ea;
+  border: 2px solid var(--farbe-erfolg);
+  color: var(--farbe-erfolg);
+  font-weight: 600;
+}
+
+.pruefung {
+  background: #fdecea;
+  border: 2px solid var(--farbe-fehler);
+}
+
+.pruefung h2 {
+  color: var(--farbe-fehler);
+  margin-bottom: 0.4rem;
+}
+
+.pruefung ul {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+/* ---------- Kopfdaten ---------- */
+
+.kopfdaten {
+  background: var(--farbe-karte);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 0.75rem 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.titel-feld input {
+  width: 100%;
+  font-size: 1.4rem;
+  font-weight: 700;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid var(--farbe-haupt);
+  border-radius: 10px;
+}
+
+.kopfdaten-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.9rem;
+}
+
+.feld-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.pflicht {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--farbe-fehler);
+  border: 1px solid var(--farbe-fehler);
+  border-radius: 999px;
+  padding: 0 0.5rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.feld input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 2px solid #c9cede;
+  border-radius: 10px;
+}
+
+/* ---------- Arbeitsfläche ---------- */
+
+.arbeitsflaeche {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+  margin-top: 0.75rem;
+  align-items: start;
+}
+
+@media (min-width: 940px) {
+  .arbeitsflaeche {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+
+  .vorschau {
+    position: sticky;
+    top: 0.75rem;
+  }
+}
+
+/* ---------- Hinzufügen ---------- */
+
+.hinzufuegen {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.9rem;
+}
+
+.hinzufuegen .gross {
+  min-width: 0;
+  flex: 1 1 180px;
+}
+
+.weiteres {
+  position: relative;
+  display: inline-block;
+  flex: 1 1 180px;
+  min-height: 56px;
+  padding: 0.8rem 1.6rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 2px solid var(--farbe-haupt);
+  background: var(--farbe-karte);
+  color: var(--farbe-haupt);
+  text-align: center;
+  cursor: pointer;
+}
+
+.weiteres select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.leer-hinweis {
+  background: var(--farbe-karte);
+  border: 2px dashed #c9cede;
+  border-radius: var(--radius);
+  padding: 1.2rem;
+  text-align: center;
+}
+
+/* ---------- Karten ---------- */
+
+.karte {
+  background: var(--farbe-karte);
+  border-radius: var(--radius);
+  border: 1px solid #dfe1ea;
+  border-left: 8px solid #999;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.karte--strophe {
+  border-left-color: #3b6ea5;
+}
+.karte--refrain {
+  border-left-color: #c0392b;
+}
+.karte--bridge {
+  border-left-color: #8e44ad;
+}
+.karte--intro {
+  border-left-color: #16a085;
+}
+.karte--schluss {
+  border-left-color: #d35400;
+}
+.karte--zwischenspiel {
+  border-left-color: #27ae60;
+}
+.karte--weiterer {
+  border-left-color: #7f8c8d;
+}
+
+.karte.ausgewaehlt {
+  outline: 3px solid var(--farbe-haupt);
+  outline-offset: 1px;
+}
+
+.karte.zieht {
+  opacity: 0.85;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+.karten-kopf {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.griff {
+  min-width: 48px;
+  min-height: 48px;
+  font-size: 1.4rem;
+  line-height: 1;
+  border-radius: 10px;
+  border: 2px solid #c9cede;
+  background: #f0f1f6;
+  touch-action: none;
+}
+
+.symbol {
+  font-size: 1.5rem;
+}
+
+.karten-name {
+  background: none;
+  border: none;
+  padding: 0.3rem 0.2rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: left;
+  border-radius: 8px;
+}
+
+.karten-name-input {
+  flex: 1 1 160px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  padding: 0.3rem 0.5rem;
+  border: 2px solid var(--farbe-haupt);
+  border-radius: 8px;
+}
+
+.abzeichen {
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: #eceafe;
+  color: var(--farbe-haupt);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+}
+
+.karten-text {
+  width: 100%;
+  resize: vertical;
+  min-height: 90px;
+  padding: 0.6rem 0.7rem;
+  border: 2px solid #c9cede;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.karten-aktionen {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+.karten-aktionen button {
+  min-height: 44px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 10px;
+  border: 2px solid #c9cede;
+  background: #f0f1f6;
+  font-weight: 600;
+}
+
+.karten-aktionen .loeschen-bestaetigt {
+  background: var(--farbe-fehler);
+  border-color: var(--farbe-fehler);
+  color: #fff;
+}
+
+/* ---------- Vorschau ---------- */
+
+.vorschau {
+  background: var(--farbe-karte);
+  border-radius: var(--radius);
+  padding: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.vorschau-titel {
+  margin-bottom: 0.6rem;
+  color: var(--farbe-haupt);
+}
+
+.folie {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  background: linear-gradient(160deg, #1d2b64 0%, #101a3d 100%);
+  color: #fff;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.folie p {
+  margin: 0;
+  font-size: clamp(1.05rem, 4.5vw, 1.45rem);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.folie p.leer {
+  height: 1.1em;
+}
+
+.folien-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.folien-nav button {
+  min-height: 44px;
+  padding: 0.35rem 0.8rem;
+  border-radius: 10px;
+  border: 2px solid var(--farbe-haupt);
+  background: var(--farbe-karte);
+  color: var(--farbe-haupt);
+  font-weight: 600;
+}
+
+.folien-stand {
+  font-weight: 600;
+  text-align: center;
+  flex: 1 1 120px;
+}

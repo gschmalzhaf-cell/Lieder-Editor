@@ -1,0 +1,13 @@
+#Title=Text mit Auszeichnungen
+#LangCount=1
+#Version=3
+---
+Vers 1
+<b>Fett</b> und <i>kursiv</i> und <u>unterstrichen</u>
+<c:$FF0000>Rot</c> und <br> erzwungener Umbruch
+<wordwrap>Automatischer Umbruch</wordwrap>
+
+---
+Refrain
+Zeile mit <h:60>größerer Schrift</h>
+
